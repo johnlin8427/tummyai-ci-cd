@@ -37,7 +37,7 @@ async def calculate_euclidean_distance(x: float = 1, y: float = 2):
     Returns the distance of a point (x, y) from the origin (0, 0)
     """
     z=power(x,2)+power(y,2)
-    result = math.sqrt(a)
+    result = math.sqrt(z)
     return {"x": x, "y": y, "distance": result, "message": "This is a very long line that exceeds 120 characters and Black will complain about it so we need to fix this formatting issue"}
 
 
