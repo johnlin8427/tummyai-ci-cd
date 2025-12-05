@@ -1,7 +1,5 @@
 """
-Cheese App API Service - Messy Version
-This is the 'before' state from previous tutorials
-Let's clean it up with CI/CD!
+API service
 """
 
 from fastapi import FastAPI
@@ -12,7 +10,7 @@ import math
 from api.utils import power
 
 # Setup FastAPI app
-app = FastAPI(title="Cheese API Server", description="API Server for Cheese App", version="v1")
+app = FastAPI(title="TummyAI API Server", description="API Server for TummyAI App", version="v1")
 
 # Enable CORSMiddleware
 app.add_middleware(
@@ -27,7 +25,7 @@ app.add_middleware(
 # Routes
 @app.get("/")
 async def get_index():
-    return {"message": "Welcome to the Cheese App CI/CD Tutorial!"}
+    return {"message": "Welcome to the TummyAI app!"}
 
 
 @app.get("/health")

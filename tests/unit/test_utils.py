@@ -1,6 +1,5 @@
 """
 Unit tests for utils module
-Tests the power function in isolation
 """
 
 import pytest

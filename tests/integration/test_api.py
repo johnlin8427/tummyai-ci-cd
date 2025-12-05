@@ -1,7 +1,6 @@
 """
-Integration tests for the Cheese App API
+Integration tests for the TummyAI App API
 Tests the full API endpoints with FastAPI TestClient
-Based on L18, Slide 11-12 - Integration tests
 """
 
 import pytest
@@ -20,7 +19,7 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert "Cheese App" in data["message"]
+        assert "TummyAI App" in data["message"]
 
     def test_root_returns_json(self):
         """Test that root returns JSON content type"""

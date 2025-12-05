@@ -4,7 +4,7 @@
 set -e
 
 # Define environment variables
-export IMAGE_NAME="cheese-app-api-service"
+export IMAGE_NAME="tummy-app-api-service"
 
 # Build the Docker image
 echo "Building Docker image: $IMAGE_NAME"

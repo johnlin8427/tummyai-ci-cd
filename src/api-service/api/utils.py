@@ -1,6 +1,5 @@
 """
-Utility functions for mathematical operations
-Used by the Cheese App API Service
+Utility functions used by API service
 """
 
 

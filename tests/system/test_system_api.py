@@ -31,7 +31,7 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert "Cheese App" in data["message"]
+        assert "TummyAI App" in data["message"]
 
     def test_health_check(self):
         """Test health check endpoint"""
@@ -71,5 +71,5 @@ class TestAPIWithoutServer:
 
         from api.service import app
 
-        assert app.title == "Cheese API Server"
+        assert app.title == "TummyAI API Server"
         assert app.version == "v1"

@@ -24,17 +24,17 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t cheese-app-api:${{ github.sha }} .
+          docker build -t tummyai-app-api:${{ github.sha }} .
 
       - name: Save Docker image
         run: |
-          docker save cheese-app-api:${{ github.sha }} -o /tmp/cheese-app-api.tar
+          docker save tummyai-app-api:${{ github.sha }} -o /tmp/tummyai-app-api.tar
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
         with:
           name: docker-image
-          path: /tmp/cheese-app-api.tar
+          path: /tmp/tummyai-app-api.tar
           retention-days: 1
 
   # Job 2: Run linting and formatting checks
@@ -54,16 +54,16 @@ jobs:
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/cheese-app-api.tar
+          docker load -i /tmp/tummyai-app-api.tar
 
       - name: Run Black formatter check
         run: |
-          docker run --rm cheese-app-api:${{ github.sha }} black --check --line-length 120 api/
+          docker run --rm tummyai-app-api:${{ github.sha }} black --check --line-length 120 api/
         continue-on-error: false
 
       - name: Run Flake8 linter
         run: |
-          docker run --rm cheese-app-api:${{ github.sha }} flake8 --max-line-length=120 --extend-ignore=E203,W503 api/
+          docker run --rm tummyai-app-api:${{ github.sha }} flake8 --max-line-length=120 --extend-ignore=E203,W503 api/
         continue-on-error: true
 
   # Job 3: Run unit tests
@@ -83,15 +83,15 @@ jobs:
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/cheese-app-api.tar
+          docker load -i /tmp/tummyai-app-api.tar
 
       - name: Run unit tests
         run: |
-          docker run --rm cheese-app-api:${{ github.sha }} pytest tests/unit/ -v --tb=short
+          docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/unit/ -v --tb=short
 
       - name: Generate coverage report
         run: |
-          docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage cheese-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml --cov-report=html:coverage
+          docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml --cov-report=html:coverage
         continue-on-error: true
 
       - name: Upload coverage report
@@ -118,11 +118,11 @@ jobs:
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/cheese-app-api.tar
+          docker load -i /tmp/tummyai-app-api.tar
 
       - name: Run integration tests
         run: |
-          docker run --rm cheese-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
+          docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
 
   # Job 5: Run system tests
   system-tests:
@@ -141,11 +141,11 @@ jobs:
 
       - name: Load Docker image
         run: |
-          docker load -i /tmp/cheese-app-api.tar
+          docker load -i /tmp/tummyai-app-api.tar
 
       - name: Start API server container
         run: |
-          docker run -d --name api-server -p 9000:9000 -e DEV=1 cheese-app-api:${{ github.sha }}
+          docker run -d --name api-server -p 9000:9000 -e DEV=1 tummyai-app-api:${{ github.sha }}
 
       - name: Wait for server to be ready
         run: |
@@ -155,7 +155,7 @@ jobs:
 
       - name: Run system tests
         run: |
-          docker run --rm --network host cheese-app-api:${{ github.sha }} pytest tests/system/ -v --tb=short
+          docker run --rm --network host tummyai-app-api:${{ github.sha }} pytest tests/system/ -v --tb=short
 
       - name: Show server logs
         if: always()

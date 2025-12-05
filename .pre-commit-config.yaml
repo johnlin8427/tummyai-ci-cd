@@ -1,5 +1,4 @@
 # Pre-commit hooks configuration
-# Based on L17, Slide 29-31 - Pre-commit framework
 # Install: pip install pre-commit
 # Setup: pre-commit install
 # Run: pre-commit run --all-files
