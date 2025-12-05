@@ -2,12 +2,11 @@
 API service
 """
 
+import math
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
-import math
-
-# import os
-from api.utils import power
+from api.utils.utils import power
+from api.routers import meal_history, health_report
 
 # Setup FastAPI app
 app = FastAPI(title="TummyAI API Server", description="API Server for TummyAI App", version="v1")
@@ -46,3 +45,7 @@ async def calculate_euclidean_distance(x: float = 1, y: float = 2):
         "distance": result,
         "message": "This is a very long line that exceeds 120 characters blah",
     }
+
+
+app.include_router(meal_history.router, prefix="/meal-history")
+app.include_router(health_report.router, prefix="/health-report")
