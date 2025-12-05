@@ -31,7 +31,7 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert "message" in data
-        assert "TummyAI App" in data["message"]
+        assert "TummyAI app" in data["message"]
 
     def test_health_check(self):
         """Test health check endpoint"""
