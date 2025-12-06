@@ -4,3 +4,4 @@
 trainer.tar.gz
 gha-creds-*.json
 /gcs_data
+/src/api-service/models
