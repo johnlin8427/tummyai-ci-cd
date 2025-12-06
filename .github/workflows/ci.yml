@@ -143,11 +143,6 @@ jobs:
           mkdir -p /tmp/secrets
           echo $GCP_KEY > /tmp/secrets/gcp-service.json
 
-      - name: Check credentials file
-        run: |
-          ls -l /tmp/secrets
-          cat /tmp/secrets/gcp-service.json | head -n 5
-
       - name: Download Docker image
         uses: actions/download-artifact@v4
         with:
