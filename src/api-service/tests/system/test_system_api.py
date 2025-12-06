@@ -5,7 +5,6 @@ Tests the actual API endpoints with HTTP requests
 
 import pytest
 import requests
-import time
 
 
 # Base URL for the API (assumes API is running)
@@ -17,7 +16,7 @@ def is_api_running():
     try:
         response = requests.get(f"{API_BASE_URL}/health", timeout=2)
         return response.status_code == 200
-    except:
+    except requests.exceptions.RequestException:
         return False
 
 

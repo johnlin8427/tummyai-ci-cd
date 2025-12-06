@@ -8,7 +8,6 @@ export IMAGE_NAME="tummyai-app-api-service"
 export BASE_DIR=$(pwd)
 export SECRETS_DIR=$(pwd)/../../../secrets/
 export PERSISTENT_DIR=$(pwd)/../../../persistent-folder/
-export TEST_DIR=$(pwd)/../../tests/
 export GCP_PROJECT="tummyai-ci-cd"
 export GCS_BUCKET_NAME="tummyai-app-models"
 export CHROMADB_HOST="tummyai-app-vector-db"
@@ -25,7 +24,6 @@ docker run --rm --name $IMAGE_NAME -ti \
 -v "$BASE_DIR":/app \
 -v "$SECRETS_DIR":/secrets \
 -v "$PERSISTENT_DIR":/persistent \
--v "$TEST_DIR":/tests \
 -p 9000:9000 \
 -e DEV=1 \
 -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
