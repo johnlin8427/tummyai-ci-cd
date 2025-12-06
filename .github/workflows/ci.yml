@@ -171,11 +171,7 @@ jobs:
 
       - name: Run system tests
         run: |
-          docker run --rm --network host \
-            -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
-            -v /tmp/secrets:/secrets \
-            tummyai-app-api:${{ github.sha }} \
-            pytest tests/system/ -v --tb=short
+          docker run --rm --network host tummyai-app-api:${{ github.sha }} pytest tests/system/ -v --tb=short
 
       - name: Show server logs
         if: always()
