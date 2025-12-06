@@ -3,3 +3,4 @@
 /docker-volumes
 trainer.tar.gz
 gha-creds-*.json
+/gcs_data

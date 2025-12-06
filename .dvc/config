@@ -1,0 +1,4 @@
+[core]
+    remote = gcs_data
+['remote "gcs_data"']
+    url = gs://tummyai-app-models/dvc_store
