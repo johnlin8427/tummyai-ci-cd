@@ -19,6 +19,7 @@ jobs:
       - name: Free up disk space
         run: |
           docker system prune -f
+          docker builder prune -af
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,11 +29,10 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t tummyai-app-api:${{ github.sha }} src/api-service/
-
-      - name: Save Docker image
-        run: |
-          docker save tummyai-app-api:${{ github.sha }} -o /tmp/tummyai-app-api.tar
+          docker buildx build \
+            --output type=docker,dest=/tmp/tummyai-app-api.tar \
+            -t tummyai-app-api:${{ github.sha }} \
+            src/api-service/
 
       - name: Upload Docker image artifact
         uses: actions/upload-artifact@v4
