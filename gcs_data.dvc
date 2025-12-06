@@ -1,6 +1,6 @@
 outs:
-- md5: 475f17c12c5345525ef1fb80056dde80.dir
-  size: 3321
-  nfiles: 3
+- md5: 2affb71c951085666ab41827ef1d2ded.dir
+  size: 3435
+  nfiles: 2
   hash: md5
   path: gcs_data
