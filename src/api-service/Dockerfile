@@ -39,7 +39,7 @@ WORKDIR /app
 COPY --chown=app:app pyproject.toml uv.lock* ./
 
 # Install dependencies in a separate layer for better caching
-RUN uv sync --frozen
+RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Copy the rest of the source code
 COPY --chown=app:app . ./
