@@ -145,7 +145,7 @@ jobs:
 
       - name: Set up GCP credentials for container
         run: |
-          echo "${{ secrets.GCP_KEY }}" > /tmp/gcp-key.json
+          echo -e "${{ secrets.GCP_KEY }}" > /tmp/gcp-key.json
 
       - name: Start API server container
         run: |
