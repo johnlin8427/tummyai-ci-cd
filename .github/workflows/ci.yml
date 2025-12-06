@@ -163,6 +163,8 @@ jobs:
           docker run -d --name api-server -p 9000:9000 \
             -e DEV=1 \
             -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
+            -e GCP_PROJECT="tummyai-ci-cd" \
+            -e GCS_BUCKET_NAME="tummyai-app-models" \
             -v /tmp/secrets:/secrets \
             tummyai-app-api:${{ github.sha }}
 
