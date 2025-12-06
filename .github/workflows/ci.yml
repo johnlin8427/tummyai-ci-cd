@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t tummyai-app-api:${{ github.sha }} .
+          docker build -t tummyai-app-api:${{ github.sha }} src/api-service/
 
       - name: Save Docker image
         run: |
