@@ -141,6 +141,8 @@ jobs:
         with:
           workload_identity_provider: projects/527151064490/locations/global/workloadIdentityPools/github/providers/my-repo
           service_account: gcp-service@tummyai-ci-cd.iam.gserviceaccount.com
+          create_credentials_file: true
+          credentials_file_path: /tmp/gcp_key.json
 
       - name: Download Docker image
         uses: actions/download-artifact@v4
@@ -156,6 +158,8 @@ jobs:
         run: |
           docker run -d --name api-server -p 9000:9000 \
             -e DEV=1 \
+            -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
+            -v /tmp/gcp_key.json:/secrets/gcp-service.json \
             tummyai-app-api:${{ github.sha }}
 
       - name: Wait for server to be ready
@@ -167,6 +171,8 @@ jobs:
       - name: Run system tests
         run: |
           docker run --rm --network host \
+            -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
+            -v /tmp/gcp_key.json:/secrets/gcp-service.json \
             tummyai-app-api:${{ github.sha }} \
             pytest tests/system/ -v --tb=short
 
