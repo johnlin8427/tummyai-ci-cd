@@ -2,8 +2,16 @@
 Utility functions used by food image analysis APIs
 """
 
+import os
 from pathlib import Path
+from transformers import pipeline
 from api.utils.utils import get_gcs_bucket, get_blob, read_csv_from_gcs
+
+
+# Define variables
+model_path = os.getenv("MODEL_PATH", "model")
+gcs_bucket = os.getenv("GCS_BUCKET_NAME", "tummyai-data-versioning")
+model_version = os.getenv("MODEL_VERSION", "model/v1")
 
 
 def load_ingredients_map() -> dict:
@@ -33,6 +41,21 @@ def load_ingredients_map() -> dict:
         return {}
 
 
+def load_food_model():
+    # Download model from GCS if not already present
+    if not verify_model_files(model_path):
+        print("⬇️ Model not found locally, downloading from GCS...")
+        download_model_from_gcs(bucket_name=gcs_bucket, model_version=model_version, local_dir=model_path)
+
+    # Verify model files exist
+    if not verify_model_files(model_path):
+        raise FileNotFoundError(f"TummyAI fine-tuned model not found at {model_path}. Model download may have failed.")
+
+    print(f"✅ Loading TummyAI fine-tuned model from {model_path}")
+    classifier = pipeline("image-classification", model=model_path)
+    return classifier
+
+
 def download_model_from_gcs(bucket_name: str, model_version: str, local_dir: str) -> str:
     """
     Download model files from GCS bucket.
@@ -52,7 +75,7 @@ def download_model_from_gcs(bucket_name: str, model_version: str, local_dir: str
     # List of model files to download
     model_files = ["config.json", "preprocessor_config.json", "model.safetensors"]
 
-    print(f"⬇️  Downloading TummyAI model from GCS bucket: {bucket_name}/{model_version}")
+    print(f"⬇️ Downloading TummyAI model from GCS bucket: {bucket_name}/{model_version}")
 
     try:
         # Download each file
@@ -66,7 +89,7 @@ def download_model_from_gcs(bucket_name: str, model_version: str, local_dir: str
                 print(f"   ✓ {filename} already exists locally")
                 continue
 
-            print(f"   ⬇️  Downloading {filename}...", end=" ")
+            print(f"   ⬇️ Downloading {filename}...", end=" ")
             blob = bucket.blob(gcs_path)
             blob.download_to_filename(str(local_path))
             print("✓")

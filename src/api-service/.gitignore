@@ -61,4 +61,8 @@ venv.bak/
 *.swo
 *~
 
+# Tests
 _test.py
+
+# Models
+/model
