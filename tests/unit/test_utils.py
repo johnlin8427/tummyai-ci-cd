@@ -3,7 +3,7 @@ Unit tests for utils module
 """
 
 import pytest
-from api.utils import power
+from api.utils.utils import power
 
 
 class TestPower:
