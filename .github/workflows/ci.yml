@@ -130,11 +130,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Set up GCP credentials
-        run: |
-          echo "${{ secrets.GCP_KEY }}" > /tmp/gcp-key.json
-          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -148,10 +143,15 @@ jobs:
         run: |
           docker load -i /tmp/tummyai-app-api.tar
 
+      - name: Set up GCP credentials for container
+        run: |
+          echo "${{ secrets.GCP_KEY }}" > /tmp/gcp-key.json
+
       - name: Start API server container
         run: |
           docker run -d --name api-server -p 9000:9000 \
-            -e DEV=1 -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json \
+            -e DEV=1 \
+            -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json \
             -v /tmp/gcp-key.json:/tmp/gcp-key.json \
             tummyai-app-api:${{ github.sha }}
 
