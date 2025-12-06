@@ -162,7 +162,7 @@ jobs:
           docker run -d --name api-server -p 9000:9000 \
             -e DEV=1 \
             -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
-            -v /tmp/gcp_key.json:/secrets/gcp-service.json \
+            -v /tmp/secrets:/secrets \
             tummyai-app-api:${{ github.sha }}
 
       - name: Wait for server to be ready
@@ -175,7 +175,7 @@ jobs:
         run: |
           docker run --rm --network host \
             -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
-            -v /tmp/gcp_key.json:/secrets/gcp-service.json \
+            -v /tmp/secrets:/secrets \
             tummyai-app-api:${{ github.sha }} \
             pytest tests/system/ -v --tb=short
 
