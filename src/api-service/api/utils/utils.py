@@ -14,15 +14,6 @@ from fastapi import HTTPException
 _bucket = None
 
 
-def power(base, exponent):
-    """Calculate base raised to the power of exponent"""
-    return base**exponent
-
-
-def unused_function():
-    pass
-
-
 def get_gcs_bucket():
     """Get GCS bucket"""
     global _bucket

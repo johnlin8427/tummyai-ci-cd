@@ -5,6 +5,8 @@ Tests the actual API endpoints with HTTP requests
 
 import pytest
 import requests
+import pandas as pd
+import numpy as np
 
 
 # Base URL for the API (assumes API is running)
@@ -39,22 +41,89 @@ class TestAPIEndpoints:
         data = response.json()
         assert data["status"] == "healthy"
 
-    def test_euclidean_distance_endpoint_default(self):
-        """Test euclidean_distance endpoint with default values"""
-        response = requests.get(f"{API_BASE_URL}/euclidean_distance/")
-        assert response.status_code == 200
-        data = response.json()
-        assert "distance" in data
-        assert data["x"] == 1.0
-        assert data["y"] == 2.0
-        assert data["distance"] == pytest.approx(2.236, rel=0.01)
+    def test_get_meal_history_example(self):
+        """Test the /meal-history/example endpoint"""
+        response = requests.get(f"{API_BASE_URL}/meal-history/example")
 
-    def test_euclidean_distance_endpoint_custom_values(self):
-        """Test euclidean_distance endpoint with custom values (3, 4)"""
-        response = requests.get(f"{API_BASE_URL}/euclidean_distance/?x=3&y=4")
         assert response.status_code == 200
         data = response.json()
-        assert data["distance"] == pytest.approx(5.0)
+        assert isinstance(data, list)
+        record = data[0]
+        assert "date_time" in record
+        assert "ingredients" in record
+        assert "symptoms" in record
+
+    def test_get_meal_history_not_found(self):
+        """Test the /meal-history endpoint when file not found"""
+        response = requests.get(f"{API_BASE_URL}/meal-history/nonexistent")
+        assert response.status_code == 404
+        data = response.json()
+        assert "detail" in data
+        assert "File not found" in data["detail"]
+
+    def test_post_meal_history_example(self):
+        """Test posting to /meal-history/example endpoint"""
+        new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
+        response = requests.post(f"{API_BASE_URL}/meal-history/example", json=new_record)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["user_id"] == "example"
+        assert data["file"] == "data/meal_history/meal_history_example.csv"
+
+    def test_post_meal_history_not_found(self):
+        """Test posting to /meal-history endpoint when file not found"""
+        new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
+        response = requests.post(f"{API_BASE_URL}/meal-history/nonexistent", json=new_record)
+        assert response.status_code == 404
+        data = response.json()
+        assert "detail" in data
+        assert "File not found" in data["detail"]
+
+    def test_get_health_report_example(self):
+        """Test the /health-report/example endpoint"""
+        response = requests.get(f"{API_BASE_URL}/health-report/example")
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+
+        record = pd.DataFrame(data)
+        expected_columns = {
+            "symptom": str,
+            "ingredient": str,
+            "odds_ratio": float,
+            "p_value": float,
+            "p_value_adj": float,
+            "significant": np.bool_,
+        }
+        for col, type in expected_columns.items():
+            assert col in record.columns
+            assert isinstance(record[col].iloc[0], type)
+
+    def test_get_health_report_not_found(self):
+        """Test the /health-report endpoint when file not found"""
+        response = requests.get(f"{API_BASE_URL}/health-report/nonexistent")
+        assert response.status_code == 404
+        data = response.json()
+        assert "detail" in data
+        assert "File not found" in data["detail"]
+
+    def test_post_health_report_example(self):
+        """Test posting to /health-report/example endpoint"""
+        response = requests.post(f"{API_BASE_URL}/health-report/example")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["user_id"] == "example"
+        assert data["report_file"] == "data/health_report/health_report_example.csv"
+
+    def test_post_health_report_not_found(self):
+        """Test posting to /health-report endpoint when file not found"""
+        response = requests.post(f"{API_BASE_URL}/health-report/nonexistent")
+        assert response.status_code == 404
+        data = response.json()
+        assert "detail" in data
+        assert "File not found" in data["detail"]
 
 
 # Standalone tests that don't require running API
@@ -70,5 +139,5 @@ class TestAPIWithoutServer:
 
         from api.service import app
 
-        assert app.title == "TummyAI API Server"
+        assert app.title == "TummyAI App API Server"
         assert app.version == "v1"

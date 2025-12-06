@@ -3,7 +3,7 @@ from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests
 
 
-def convert_onehot(history: pd.DataFrame) -> list[str]:
+def convert_onehot(history: pd.DataFrame) -> pd.DataFrame:
     """
     One-hot encode ingredients and symptoms in the meal history DataFrame.
 
@@ -87,9 +87,10 @@ def run_fisher(history: pd.DataFrame) -> pd.DataFrame:
     # Convert results to DataFrame
     results_df = pd.DataFrame(results)
 
-    # Multiple hypotheses testing correction (Benjamini-Hochberg)
-    reject, pvals_corrected, _, _ = multipletests(results_df["p_value"].values, alpha=0.05, method="fdr_bh")
-    results_df["p_value_adj"] = pvals_corrected
-    results_df["significant"] = reject
+    if not results_df.empty:
+        # Multiple hypotheses testing correction (Benjamini-Hochberg)
+        reject, pvals_corrected, _, _ = multipletests(results_df["p_value"].values, alpha=0.05, method="fdr_bh")
+        results_df["p_value_adj"] = pvals_corrected
+        results_df["significant"] = reject
 
     return results_df
