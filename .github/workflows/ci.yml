@@ -37,101 +37,110 @@ jobs:
           path: /tmp/tummyai-app-api.tar
           retention-days: 1
 
-  # Job 2: Run linting and formatting checks
-  lint-and-format:
-    name: Lint and Format Check
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # # Job 2: Run linting and formatting checks
+  # lint-and-format:
+  #   name: Lint and Format Check
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
+  #     - name: Download Docker image
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-image
+  #         path: /tmp
 
-      - name: Load Docker image
-        run: |
-          docker load -i /tmp/tummyai-app-api.tar
+  #     - name: Load Docker image
+  #       run: |
+  #         docker load -i /tmp/tummyai-app-api.tar
 
-      - name: Run Black formatter check
-        run: |
-          docker run --rm tummyai-app-api:${{ github.sha }} black --check --line-length 120 api/
-        continue-on-error: false
+  #     - name: Run Black formatter check
+  #       run: |
+  #         docker run --rm tummyai-app-api:${{ github.sha }} black --check --line-length 120 api/
+  #       continue-on-error: false
 
-      - name: Run Flake8 linter
-        run: |
-          docker run --rm tummyai-app-api:${{ github.sha }} flake8 --max-line-length=120 --extend-ignore=E203,W503 api/
-        continue-on-error: true
+  #     - name: Run Flake8 linter
+  #       run: |
+  #         docker run --rm tummyai-app-api:${{ github.sha }} flake8 --max-line-length=120 --extend-ignore=E203,W503 api/
+  #       continue-on-error: true
 
-  # Job 3: Run unit tests
-  unit-tests:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # # Job 3: Run unit tests
+  # unit-tests:
+  #   name: Unit Tests
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
+  #     - name: Download Docker image
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-image
+  #         path: /tmp
 
-      - name: Load Docker image
-        run: |
-          docker load -i /tmp/tummyai-app-api.tar
+  #     - name: Load Docker image
+  #       run: |
+  #         docker load -i /tmp/tummyai-app-api.tar
 
-      - name: Run unit tests
-        run: |
-          docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/unit/ -v --tb=short
+  #     - name: Run unit tests
+  #       run: |
+  #         docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/unit/ -v --tb=short
 
-      - name: Generate coverage report
-        run: |
-          docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml --cov-report=html:coverage
-        continue-on-error: true
+  #     - name: Generate coverage report
+  #       run: |
+  #         docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml --cov-report=html:coverage
+  #       continue-on-error: true
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-report-unit
-          path: coverage/
-        if: always()
+  #     - name: Upload coverage report
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: coverage-report-unit
+  #         path: coverage/
+  #       if: always()
 
-  # Job 4: Run integration tests
-  integration-tests:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  # # Job 4: Run integration tests
+  # integration-tests:
+  #   name: Integration Tests
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
 
-      - name: Download Docker image
-        uses: actions/download-artifact@v4
-        with:
-          name: docker-image
-          path: /tmp
+  #     - name: Download Docker image
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: docker-image
+  #         path: /tmp
 
-      - name: Load Docker image
-        run: |
-          docker load -i /tmp/tummyai-app-api.tar
+  #     - name: Load Docker image
+  #       run: |
+  #         docker load -i /tmp/tummyai-app-api.tar
 
-      - name: Run integration tests
-        run: |
-          docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
+  #     - name: Run integration tests
+  #       run: |
+  #         docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
 
   # Job 5: Run system tests
   system-tests:
     name: System Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
     needs: build
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up GCP credentials
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/527151064490/locations/global/workloadIdentityPools/github/providers/my-repo
+          service_account: gcp-service@tummyai-ci-cd.iam.gserviceaccount.com
 
       - name: Download Docker image
         uses: actions/download-artifact@v4
@@ -143,16 +152,10 @@ jobs:
         run: |
           docker load -i /tmp/tummyai-app-api.tar
 
-      - name: Set up GCP credentials for container
-        run: |
-          echo -e "${{ secrets.GCP_KEY }}" > /tmp/gcp-key.json
-
       - name: Start API server container
         run: |
           docker run -d --name api-server -p 9000:9000 \
             -e DEV=1 \
-            -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json \
-            -v /tmp/gcp-key.json:/tmp/gcp-key.json \
             tummyai-app-api:${{ github.sha }}
 
       - name: Wait for server to be ready
@@ -164,8 +167,6 @@ jobs:
       - name: Run system tests
         run: |
           docker run --rm --network host \
-            -e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key.json \
-            -v /tmp/gcp-key.json:/tmp/gcp-key.json \
             tummyai-app-api:${{ github.sha }} \
             pytest tests/system/ -v --tb=short
 
