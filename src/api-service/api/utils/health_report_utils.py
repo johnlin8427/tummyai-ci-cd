@@ -1,3 +1,7 @@
+"""
+Utility functions used by health report APIs
+"""
+
 import pandas as pd
 from scipy.stats import fisher_exact
 from statsmodels.stats.multitest import multipletests

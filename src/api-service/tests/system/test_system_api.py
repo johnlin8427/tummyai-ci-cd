@@ -1,5 +1,5 @@
 """
-Integration tests for FastAPI endpoints
+System tests for FastAPI endpoints
 Tests the actual API endpoints with HTTP requests
 """
 

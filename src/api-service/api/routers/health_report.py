@@ -1,3 +1,7 @@
+"""
+Health report APIs
+"""
+
 from fastapi import APIRouter
 
 from api.utils.utils import get_blob, read_csv_from_gcs, write_csv_to_gcs
