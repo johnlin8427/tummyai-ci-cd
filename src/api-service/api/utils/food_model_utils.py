@@ -12,7 +12,7 @@ from api.utils.utils import get_gcs_bucket, get_blob, read_csv_from_gcs
 gcs_bucket_name = os.getenv("GCS_BUCKET_NAME")
 map_gcs_path = "data/reference/dish_to_ingredients_cleaned.csv"
 model_gcs_path = "models/v1"
-model_local_path = "models"
+model_local_path = "/tmp/models"
 
 
 def load_ingredients_map() -> dict:

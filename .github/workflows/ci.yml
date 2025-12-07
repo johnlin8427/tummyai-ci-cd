@@ -127,7 +127,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          docker run --rm tummyai-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
+          docker run --rm -e SKIP_DOWNLOAD=1 tummyai-app-api:${{ github.sha }} pytest tests/integration/ -v --tb=short
 
   # Job 5: Run system tests
   system-tests:
