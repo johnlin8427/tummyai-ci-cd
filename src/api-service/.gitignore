@@ -65,4 +65,4 @@ venv.bak/
 _test.py
 
 # Models
-/model
+models/

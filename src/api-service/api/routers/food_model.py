@@ -15,10 +15,10 @@ from api.utils.food_model_utils import load_ingredients_map, load_food_model
 router = APIRouter()
 
 # Define variables
-skip_model_download = os.getenv("SKIP_MODEL_DOWNLOAD", "0") == "1"
+skip_download = os.getenv("SKIP_DOWNLOAD", "0")
 
 # Load ingredients map and computer vision model once at startup
-if skip_model_download:
+if skip_download == "1":
     ingredients_map = {}
     classifier = None
 else:
