@@ -10,8 +10,6 @@ export SECRETS_DIR=$(pwd)/../../../secrets/
 export PERSISTENT_DIR=$(pwd)/../../../persistent-folder/
 export GCP_PROJECT="tummyai-ci-cd"
 export GCS_BUCKET_NAME="tummyai-app-models"
-export CHROMADB_HOST="tummyai-app-vector-db"
-export CHROMADB_PORT=8000
 
 # Create the network if we don't have it yet
 docker network inspect tummyai-app-network >/dev/null 2>&1 || docker network create tummyai-app-network
@@ -29,7 +27,5 @@ docker run --rm --name $IMAGE_NAME -ti \
 -e GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-service.json \
 -e GCP_PROJECT=$GCP_PROJECT \
 -e GCS_BUCKET_NAME=$GCS_BUCKET_NAME \
--e CHROMADB_HOST=$CHROMADB_HOST \
--e CHROMADB_PORT=$CHROMADB_PORT \
 --network tummyai-app-network \
 $IMAGE_NAME

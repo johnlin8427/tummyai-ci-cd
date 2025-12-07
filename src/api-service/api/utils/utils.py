@@ -45,7 +45,7 @@ def read_csv_from_gcs(blob):
 
     df = pd.read_csv(io.StringIO(content))
     df = df.replace([float("inf"), float("-inf")], None)
-    df = df.fillna(None)
+    df = df.where(pd.notna(df), None)
     return df
 
 
