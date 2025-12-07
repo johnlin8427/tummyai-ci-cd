@@ -38,9 +38,14 @@ def get_blob(pattern):
 def read_csv_from_gcs(blob):
     """Read CSV from GCS"""
     content = blob.download_as_text()
+
+    # Handle empty files
+    if not content.strip():
+        return pd.DataFrame()
+
     df = pd.read_csv(io.StringIO(content))
     df = df.replace([float("inf"), float("-inf")], None)
-    df = df.where(pd.notna(df), None)
+    df = df.fillna(None)
     return df
 
 

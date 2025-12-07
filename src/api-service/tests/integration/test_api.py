@@ -117,8 +117,8 @@ class TestMealHistoryAPIEndpoints:
             assert "detail" in data
             assert data["detail"] == "File not found"
 
-    def test_post_meal_history_simple(self):
-        """Test POST /meal-history/{user_id} endpoint with simple data"""
+    def test_put_meal_history_simple(self):
+        """Test PUT /meal-history/{user_id} endpoint with simple data"""
         user_id = "testuser"
         new_meal = {"date_time": "2025-01-02 12:00:00", "ingredients": "bread", "symptoms": "headache,nausea"}
 
@@ -139,7 +139,7 @@ class TestMealHistoryAPIEndpoints:
             mock_read_csv.return_value = existing_df
             mock_write_csv.return_value = None
 
-            response = client.post(f"/meal-history/{user_id}", json=new_meal)
+            response = client.put(f"/meal-history/{user_id}", json=new_meal)
 
             assert response.status_code == 200
             data = response.json()
@@ -152,15 +152,15 @@ class TestMealHistoryAPIEndpoints:
             assert new_meal["ingredients"] in written_df["ingredients"].values
             assert new_meal["symptoms"] in written_df["symptoms"].values
 
-    def test_post_meal_history_not_found(self):
-        """Test POST /meal-history/{user_id} endpoint when file not found"""
+    def test_put_meal_history_not_found(self):
+        """Test PUT /meal-history/{user_id} endpoint when file not found"""
         user_id = "nonexistentuser"
         new_meal = {"date_time": "2025-01-02 12:00:00", "ingredients": "bread", "symptoms": "headache,nausea"}
 
         with patch("api.routers.meal_history.get_blob") as mock_get_blob:
             mock_get_blob.side_effect = HTTPException(status_code=404, detail="File not found")
 
-            response = client.post(f"/meal-history/{user_id}", json=new_meal)
+            response = client.put(f"/meal-history/{user_id}", json=new_meal)
 
             assert response.status_code == 404
             data = response.json()
@@ -230,8 +230,8 @@ class TestHealthReportAPIEndpoints:
             assert "detail" in data
             assert data["detail"] == "File not found"
 
-    def test_post_health_report_simple(self):
-        """Test POST /health-report/{user_id} endpoint with simple data"""
+    def test_put_health_report_simple(self):
+        """Test PUT /health-report/{user_id} endpoint with simple data"""
         user_id = "testuser"
 
         # Sample meal history data returned from GCS
@@ -283,7 +283,7 @@ class TestHealthReportAPIEndpoints:
             mock_run_fisher.return_value = sample_report
             mock_write_csv.return_value = None
 
-            response = client.post(f"/health-report/{user_id}")
+            response = client.put(f"/health-report/{user_id}")
 
             assert response.status_code == 200
             data = response.json()
@@ -291,14 +291,14 @@ class TestHealthReportAPIEndpoints:
             assert data["user_id"] == user_id
             assert data["report_file"] == "health_report_testuser.csv"
 
-    def test_post_health_report_not_found(self):
-        """Test POST /health-report/{user_id} endpoint when meal history file not found"""
+    def test_put_health_report_not_found(self):
+        """Test PUT /health-report/{user_id} endpoint when meal history file not found"""
         user_id = "nonexistentuser"
 
         with patch("api.routers.health_report.get_blob") as mock_get_blob:
             mock_get_blob.side_effect = HTTPException(status_code=404, detail="File not found")
 
-            response = client.post(f"/health-report/{user_id}")
+            response = client.put(f"/health-report/{user_id}")
 
             assert response.status_code == 404
             data = response.json()

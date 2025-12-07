@@ -1,48 +1,46 @@
-# Use the official Debian-hosted Python image
-FROM python:3.12-slim-bookworm
+FROM python:3.12-slim-bookworm AS builder
 
-ARG DEBIAN_PACKAGES="build-essential curl libpq5"
+ARG DEBIAN_PACKAGES="build-essential libpq5 curl"
 
-# Prevent apt from showing prompts
-ENV DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/home/app/.venv \
+    UV_LINK_MODE=copy \
+    PATH=/home/app/.venv/bin:$PATH
 
-# Python wants UTF-8 locale
-ENV LANG=C.UTF-8
-
-# Tell Python to disable buffering so we don't lose any logs.
-ENV PYTHONUNBUFFERED=1
-
-# Tell uv to copy packages from the wheel into the site-packages
-ENV UV_LINK_MODE=copy
-ENV UV_PROJECT_ENVIRONMENT=/home/app/.venv
-
-# Ensure we have an up to date baseline, install dependencies and
-# create a user so we don't run the app as root
-RUN set -ex; \
-    for i in $(seq 1 8); do mkdir -p "/usr/share/man/man${i}"; done && \
-    apt-get update && \
-    apt-get upgrade -y && \
+RUN apt-get update && \
     apt-get install -y --no-install-recommends $DEBIAN_PACKAGES && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    pip install --no-cache-dir --upgrade pip && \
-    pip install uv && \
-    useradd -ms /bin/bash app -d /home/app -u 1000 && \
-    mkdir -p /app && \
-    chown app:app /app
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Switch to the new user
-USER app
+# Create virtualenv
+RUN python -m venv $UV_PROJECT_ENVIRONMENT
+
 WORKDIR /app
+COPY pyproject.toml uv.lock ./
 
-# Copy dependency files first for better layer caching
-COPY --chown=app:app pyproject.toml uv.lock* ./
+# Install uv inside venv and sync dependencies
+RUN pip install --no-cache-dir --upgrade pip uv
+RUN uv sync --frozen
 
-# Install dependencies in a separate layer for better caching
-RUN uv sync --frozen --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Copy the rest of the source code
-COPY --chown=app:app . ./
+
+FROM python:3.12-slim-bookworm AS runtime
+
+ENV LANG=C.UTF-8 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/home/app/.venv \
+    UV_LINK_MODE=copy
+
+# Create user
+RUN useradd -ms /bin/bash app -d /home/app -u 1000
+
+WORKDIR /app
+USER app
+
+# Copy only runtime files
+COPY --chown=app:app --from=builder /home/app/.venv /home/app/.venv
+COPY --chown=app:app . .
 
 # Entry point
 ENTRYPOINT ["/bin/bash","docker-entrypoint.sh"]

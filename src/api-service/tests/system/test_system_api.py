@@ -61,20 +61,20 @@ class TestAPIEndpoints:
         assert "detail" in data
         assert "File not found" in data["detail"]
 
-    def test_post_meal_history_example(self):
-        """Test posting to /meal-history/example endpoint"""
+    def test_put_meal_history_example(self):
+        """Test putting to /meal-history/example endpoint"""
         new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
-        response = requests.post(f"{API_BASE_URL}/meal-history/example", json=new_record)
+        response = requests.put(f"{API_BASE_URL}/meal-history/example", json=new_record)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
         assert data["user_id"] == "example"
         assert data["file"] == "data/meal_history/meal_history_example.csv"
 
-    def test_post_meal_history_not_found(self):
-        """Test posting to /meal-history endpoint when file not found"""
+    def test_put_meal_history_not_found(self):
+        """Test putting to /meal-history endpoint when file not found"""
         new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
-        response = requests.post(f"{API_BASE_URL}/meal-history/nonexistent", json=new_record)
+        response = requests.put(f"{API_BASE_URL}/meal-history/nonexistent", json=new_record)
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
@@ -108,18 +108,18 @@ class TestAPIEndpoints:
         assert "detail" in data
         assert "File not found" in data["detail"]
 
-    def test_post_health_report_example(self):
-        """Test posting to /health-report/example endpoint"""
-        response = requests.post(f"{API_BASE_URL}/health-report/example")
+    def test_put_health_report_example(self):
+        """Test putting to /health-report/example endpoint"""
+        response = requests.put(f"{API_BASE_URL}/health-report/example")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
         assert data["user_id"] == "example"
         assert data["report_file"] == "data/health_report/health_report_example.csv"
 
-    def test_post_health_report_not_found(self):
-        """Test posting to /health-report endpoint when file not found"""
-        response = requests.post(f"{API_BASE_URL}/health-report/nonexistent")
+    def test_put_health_report_not_found(self):
+        """Test putting to /health-report endpoint when file not found"""
+        response = requests.put(f"{API_BASE_URL}/health-report/nonexistent")
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data

@@ -29,6 +29,7 @@ jobs:
 
       - name: Build Docker image
         run: |
+          export DOCKER_BUILDKIT=1
           docker buildx build \
             --output type=docker,dest=/tmp/tummyai-app-api.tar \
             -t tummyai-app-api:${{ github.sha }} \

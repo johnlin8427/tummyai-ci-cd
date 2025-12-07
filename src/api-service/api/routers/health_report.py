@@ -2,13 +2,36 @@
 Health report APIs
 """
 
-from fastapi import APIRouter
+import pandas as pd
+from fastapi import APIRouter, HTTPException
 
-from api.utils.utils import get_blob, read_csv_from_gcs, write_csv_to_gcs
+from api.utils.utils import get_gcs_bucket, get_blob, read_csv_from_gcs, write_csv_to_gcs
 from api.utils.health_report_utils import convert_onehot, run_fisher
 
 # Define router
 router = APIRouter()
+
+
+@router.post("/{user_id}")
+async def create_health_report(user_id: str):
+    """Create empty health report for a new user ID, only if it does not exist"""
+    # Construct the GCS path
+    bucket = get_gcs_bucket()
+    path = f"data/health_report/health_report_{user_id}.csv"
+    blob = bucket.blob(path)
+
+    # Check if the file already exists
+    if blob.exists():
+        raise HTTPException(status_code=409, detail=f"Health report for user {user_id} already exists.")
+
+    # Create empty DataFrame
+    columns = ["metric", "value", "odds_ratio", "p_value", "p_value_adj", "significant"]
+    df = pd.DataFrame(columns=columns)
+
+    # Write empty health report CSV to GCS
+    write_csv_to_gcs(blob, df)
+
+    return {"status": "success", "user_id": user_id, "report_file": blob.name}
 
 
 @router.get("/{user_id}")
@@ -22,7 +45,7 @@ async def get_health_report(user_id: str):
     return df.to_dict(orient="records")
 
 
-@router.post("/{user_id}")
+@router.put("/{user_id}")
 async def update_health_report(user_id: str):
     """Update health report for a specific user ID"""
     # Read meal history CSV from GCS
