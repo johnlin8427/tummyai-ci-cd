@@ -31,7 +31,7 @@ async def create_health_report(user_id: str):
     # Write empty health report CSV to GCS
     write_csv_to_gcs(blob, df)
 
-    return {"status": "success", "user_id": user_id, "report_file": blob.name}
+    return {"status": "success", "user_id": user_id, "file": blob.name}
 
 
 @router.get("/{user_id}")
@@ -64,4 +64,4 @@ async def update_health_report(user_id: str):
     report_blob = get_blob(report_pattern)
     write_csv_to_gcs(report_blob, report_df)
 
-    return {"status": "success", "user_id": user_id, "report_file": report_blob.name}
+    return {"status": "success", "user_id": user_id, "file": report_blob.name}

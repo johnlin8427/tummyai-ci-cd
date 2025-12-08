@@ -25,7 +25,7 @@ async def create_meal_history(user_id: str):
         raise HTTPException(status_code=409, detail=f"Meal history for user {user_id} already exists.")
 
     # Create empty DataFrame
-    columns = ["date_time", "ingredients", "symptoms"]
+    columns = ["date_time", "dish", "ingredients", "symptoms"]
     df = pd.DataFrame(columns=columns)
 
     # Write empty meal history CSV to GCS
@@ -56,6 +56,7 @@ async def update_meal_history(meal: dict, user_id: str):
     # Prepare new row
     new_row = {
         "date_time": meal.get("date_time"),
+        "dish": meal.get("dish", ""),
         "ingredients": meal.get("ingredients", ""),
         "symptoms": meal.get("symptoms", ""),
     }
