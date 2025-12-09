@@ -104,34 +104,8 @@ class TestInvalidRoutes:
         assert response.status_code == 405
 
 
-class TestMealHistoryEndpoints:
-    """Tests for meal history endpoints"""
-
-    def test_get_meal_history_invalid_user(self):
-        """Test GET /meal-history/{user_id} returns 404 for invalid user"""
-        response = client.get("/meal-history/nonexistent_user_12345")
-        assert response.status_code == 404
-
-    def test_get_meal_history_example_user(self):
-        """Test GET /meal-history/example_user returns 200"""
-        response = client.get("/meal-history/example_user")
-        # May return 200 or 404 depending on if example data exists
-        assert response.status_code in [200, 404]
-
-
-class TestHealthReportEndpoints:
-    """Tests for health report endpoints"""
-
-    def test_get_health_report_invalid_user(self):
-        """Test GET /health-report/{user_id} returns 404 for invalid user"""
-        response = client.get("/health-report/nonexistent_user_12345")
-        assert response.status_code == 404
-
-    def test_get_health_report_example_user(self):
-        """Test GET /health-report/example_user returns 200"""
-        response = client.get("/health-report/example_user")
-        # May return 200 or 404 depending on if example data exists
-        assert response.status_code in [200, 404]
+# Note: MealHistory and HealthReport endpoint tests are in integration tests
+# because they require GCS connection. Unit tests should not make external calls.
 
 
 class TestFoodModelEndpoints:

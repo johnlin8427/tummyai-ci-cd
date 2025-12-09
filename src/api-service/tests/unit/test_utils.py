@@ -32,17 +32,29 @@ def mock_blob():
 class TestGetBucket:
     """Tests for the get_gcs_bucket() function"""
 
-    def test_get_gcs_bucket(self, mock_bucket):
+    def test_get_gcs_bucket(self):
         """Test get_gcs_bucket() with mock bucket"""
-        with patch("api.utils.utils.storage.Client") as mock_client_class:
-            mock_client = mock_client_class.return_value
-            mock_client.bucket.return_value = mock_bucket
+        # Reset global _bucket to None so we can test initialization
+        import api.utils.utils as utils_module
+        original_bucket = getattr(utils_module, '_bucket', None)
+        utils_module._bucket = None
+        
+        try:
+            with patch("api.utils.utils.storage.Client") as mock_client_class:
+                mock_client = MagicMock()
+                mock_client_class.return_value = mock_client
+                mock_bucket = MagicMock()
+                mock_client.bucket.return_value = mock_bucket
 
-            os.environ["GCS_BUCKET_NAME"] = "test-bucket"
+                os.environ["GCS_BUCKET_NAME"] = "test-bucket"
 
-            # First call initializes _bucket
-            bucket = get_gcs_bucket()
-            assert bucket is mock_bucket
+                # First call initializes _bucket
+                bucket = get_gcs_bucket()
+                assert bucket is mock_bucket
+                mock_client.bucket.assert_called_once_with("test-bucket")
+        finally:
+            # Restore original state
+            utils_module._bucket = original_bucket
 
 
 class TestGetBlob:
