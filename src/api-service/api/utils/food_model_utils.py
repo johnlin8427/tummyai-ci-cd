@@ -18,7 +18,7 @@ from api.utils.utils import get_gcs_bucket
 gcs_bucket_name = os.getenv("GCS_BUCKET_NAME")
 dish_to_ing_gcs_path = "data/reference/dish_to_ingredients.csv"
 ing_to_fodmap_gcs_path = "data/reference/ingredient_to_fodmap.csv"
-model_gcs_path = "models/v1"
+model_gcs_path = "models/v2"
 model_local_path = "/tmp/models"
 
 

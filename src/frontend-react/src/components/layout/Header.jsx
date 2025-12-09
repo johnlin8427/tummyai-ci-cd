@@ -118,7 +118,7 @@ export default function Header() {
                     <div className="header-content">
                         <Link href="/" className="header-logo">
                             <Image
-                                src="/assets/logo.svg"
+                                src="/assets/tummyai-logo.svg"
                                 alt="TummyAI Logo"
                                 width={32}
                                 height={32}
