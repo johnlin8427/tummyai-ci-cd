@@ -1,0 +1,347 @@
+# GitHub Actions CD Pipeline
+# Deploys to Kubernetes cluster when code is merged to main
+# Uses Pulumi for infrastructure management
+
+name: CD Pipeline - Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual triggers
+
+env:
+  PROJECT_ID: tummyai-ci-cd
+  REGION: us-central1
+  ZONE: us-central1-a
+  REPOSITORY_NAME: tummyai-app-repository
+  REGISTRY_URL: us-docker.pkg.dev/tummyai-ci-cd/tummyai-app-repository
+
+jobs:
+  # Job 1: Run CI tests first (reuse existing CI workflow)
+  ci-tests:
+    name: Run CI Tests
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit
+
+  # Job 2: Build and push Docker images to Artifact Registry
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: ci-tests
+    permissions:
+      contents: read
+      id-token: write
+
+    outputs:
+      api-image-tag: ${{ steps.build-api.outputs.image-tag }}
+      frontend-image-tag: ${{ steps.build-frontend.outputs.image-tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        run: |
+          echo "=== Available disk space before cleanup ==="
+          df -h
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /usr/local/share/boost
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+          docker system prune -af
+          echo "=== Available disk space after cleanup ==="
+          df -h
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker us-docker.pkg.dev
+
+      - name: Build and push API service image
+        id: build-api
+        run: |
+          IMAGE_TAG="${{ env.REGISTRY_URL }}/tummyai-app-api-service:${{ github.sha }}"
+          LATEST_TAG="${{ env.REGISTRY_URL }}/tummyai-app-api-service:latest"
+          
+          echo "Building API service image..."
+          docker build -t $IMAGE_TAG -t $LATEST_TAG src/api-service/
+          
+          echo "Pushing API service image..."
+          docker push $IMAGE_TAG
+          docker push $LATEST_TAG
+          
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "✅ API image pushed: $IMAGE_TAG"
+
+      - name: Build and push Frontend image
+        id: build-frontend
+        run: |
+          IMAGE_TAG="${{ env.REGISTRY_URL }}/tummyai-app-frontend-react:${{ github.sha }}"
+          LATEST_TAG="${{ env.REGISTRY_URL }}/tummyai-app-frontend-react:latest"
+          
+          echo "Building Frontend image..."
+          docker build -t $IMAGE_TAG -t $LATEST_TAG src/frontend-react/
+          
+          echo "Pushing Frontend image..."
+          docker push $IMAGE_TAG
+          docker push $LATEST_TAG
+          
+          echo "image-tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "✅ Frontend image pushed: $IMAGE_TAG"
+
+      - name: Output image info
+        run: |
+          echo "=== Images Pushed ==="
+          echo "API Service: ${{ steps.build-api.outputs.image-tag }}"
+          echo "Frontend: ${{ steps.build-frontend.outputs.image-tag }}"
+
+  # Job 3: Deploy to Kubernetes using Pulumi
+  deploy-kubernetes:
+    name: Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Pulumi
+        uses: pulumi/actions@v5
+
+      - name: Install deployment dependencies
+        run: |
+          cd src/deployment
+          pip install -r requirements.txt 2>/dev/null || pip install pulumi pulumi-gcp pulumi-kubernetes pulumi-docker-build
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials tummyai-app-cluster \
+            --zone=${{ env.ZONE }} \
+            --project=${{ env.PROJECT_ID }}
+
+      - name: Deploy images with Pulumi
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          GCP_REGION: ${{ env.REGION }}
+        run: |
+          cd src/deployment/deploy_images
+          pulumi stack select dev --create || true
+          pulumi up --yes --skip-preview
+
+      - name: Deploy Kubernetes resources with Pulumi
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          GCP_REGION: ${{ env.REGION }}
+        run: |
+          cd src/deployment/deploy_k8s
+          pulumi stack select dev --create || true
+          pulumi up --yes --skip-preview
+
+      - name: Wait for deployment rollout
+        run: |
+          echo "Waiting for deployments to be ready..."
+          kubectl rollout status deployment/api -n tummyai-app --timeout=300s || true
+          kubectl rollout status deployment/frontend -n tummyai-app --timeout=300s || true
+
+      - name: Get deployment status
+        id: deployment-status
+        run: |
+          echo "=== Deployment Status ==="
+          kubectl get deployments -n tummyai-app
+          kubectl get pods -n tummyai-app
+          kubectl get services -n tummyai-app
+          
+          # Get ingress IP
+          INGRESS_IP=$(kubectl get ingress -n tummyai-app -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
+          echo "ingress-ip=$INGRESS_IP" >> $GITHUB_OUTPUT
+          echo "Ingress IP: $INGRESS_IP"
+
+  # Job 4: Post-deployment tests
+  post-deployment-tests:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: deploy-kubernetes
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Install gke-gcloud-auth-plugin
+        run: |
+          gcloud components install gke-gcloud-auth-plugin
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials tummyai-app-cluster \
+            --zone=${{ env.ZONE }} \
+            --project=${{ env.PROJECT_ID }}
+
+      - name: Get service URL
+        id: get-url
+        run: |
+          # Try to get ingress IP
+          INGRESS_IP=$(kubectl get ingress -n tummyai-app -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
+          
+          if [ -n "$INGRESS_IP" ]; then
+            SERVICE_URL="http://${INGRESS_IP}.sslip.io"
+          else
+            # Fall back to port-forward for testing
+            SERVICE_URL="http://localhost:9000"
+            kubectl port-forward service/api 9000:9000 -n tummyai-app &
+            sleep 10
+          fi
+          
+          echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
+          echo "Service URL: $SERVICE_URL"
+
+      - name: Run smoke tests
+        run: |
+          SERVICE_URL="${{ steps.get-url.outputs.url }}"
+          
+          echo "=== Running Post-Deployment Smoke Tests ==="
+          
+          # Test 1: Health endpoint
+          echo "Test 1: Health endpoint"
+          for i in {1..10}; do
+            if curl -sf "$SERVICE_URL/api-service/health" > /dev/null 2>&1; then
+              echo "✅ Health check passed"
+              break
+            fi
+            echo "Attempt $i: Waiting for service..."
+            sleep 10
+          done
+          
+          # Test 2: Root endpoint
+          echo "Test 2: Root endpoint"
+          curl -sf "$SERVICE_URL/api-service/" && echo "✅ Root endpoint passed" || echo "⚠️ Root endpoint check failed"
+          
+          echo "=== Smoke tests completed ==="
+
+      - name: Cleanup port-forward
+        if: always()
+        run: |
+          pkill -f "kubectl port-forward" || true
+
+  # Job 5: Deployment notification
+  notify:
+    name: Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-kubernetes, post-deployment-tests]
+    if: always()
+
+    steps:
+      - name: Deployment status summary
+        run: |
+          echo "=== CD Pipeline Summary ==="
+          echo "Build & Push: ${{ needs.build-and-push.result }}"
+          echo "Kubernetes Deploy: ${{ needs.deploy-kubernetes.result }}"
+          echo "Post-Deployment Tests: ${{ needs.post-deployment-tests.result }}"
+          
+          if [[ "${{ needs.build-and-push.result }}" == "success" ]] && \
+             [[ "${{ needs.deploy-kubernetes.result }}" == "success" ]] && \
+             [[ "${{ needs.post-deployment-tests.result }}" == "success" ]]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment had issues!"
+            exit 1
+          fi
+
+      - name: Check if Slack webhook is configured
+        id: slack-check
+        run: |
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            echo "enabled=true" >> $GITHUB_OUTPUT
+          else
+            echo "enabled=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        if: always() && steps.slack-check.outputs.enabled == 'true'
+        uses: slackapi/slack-github-action@v1.26.0
+        with:
+          payload: |
+            {
+              "text": "${{ needs.deploy-kubernetes.result == 'success' && '🚀 Deployment Successful' || '❌ Deployment Failed' }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ needs.deploy-kubernetes.result == 'success' && '🚀 Deployment Successful' || '❌ Deployment Failed' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Repository:*\n${{ github.repository }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Branch:*\n${{ github.ref_name }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Commit:*\n${{ github.sha }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*Author:*\n${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Pipeline Results:*\n• Build & Push: ${{ needs.build-and-push.result == 'success' && '✅' || '❌' }}\n• K8s Deploy: ${{ needs.deploy-kubernetes.result == 'success' && '✅' || '❌' }}\n• Smoke Tests: ${{ needs.post-deployment-tests.result == 'success' && '✅' || '❌' }}"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Run>"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

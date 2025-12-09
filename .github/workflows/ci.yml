@@ -1,6 +1,7 @@
-# GitHub Actions CI/CD Pipeline
-# Runs on every push and pull request to main branch
+# GitHub Actions CI Pipeline
+# Runs on every push and pull request to main/develop branches
 # All tests run inside Docker container for consistency
+# Reusable workflow - can be called from CD pipeline
 
 name: CI Pipeline
 
@@ -9,6 +10,7 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_call:  # Allow this workflow to be called by other workflows
 
 jobs:
   # Job 1: Build Docker image (shared across all jobs)
@@ -101,8 +103,28 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          docker run --rm -u $(id -u) -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml:/app/coverage/coverage.xml --cov-report=html:/app/coverage
-        continue-on-error: true
+          docker run --rm -u $(id -u) -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml:/app/coverage/coverage.xml --cov-report=html:/app/coverage --cov-fail-under=60
+        continue-on-error: false
+
+      - name: Check coverage threshold
+        run: |
+          echo "=== Coverage Report ==="
+          if [ -f coverage/coverage.xml ]; then
+            # Extract line coverage percentage from XML
+            COVERAGE=$(grep -oP 'line-rate="\K[^"]+' coverage/coverage.xml | head -1)
+            COVERAGE_PERCENT=$(echo "$COVERAGE * 100" | bc -l | xargs printf "%.1f")
+            echo "Line Coverage: ${COVERAGE_PERCENT}%"
+            
+            # Check if coverage meets 60% threshold
+            if (( $(echo "$COVERAGE >= 0.60" | bc -l) )); then
+              echo "✅ Coverage meets 60% threshold!"
+            else
+              echo "❌ Coverage is below 60% threshold!"
+              exit 1
+            fi
+          else
+            echo "⚠️ Coverage report not found, skipping threshold check"
+          fi
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
