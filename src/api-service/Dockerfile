@@ -30,7 +30,8 @@ FROM python:3.12-slim-bookworm AS runtime
 ENV LANG=C.UTF-8 \
     PYTHONUNBUFFERED=1 \
     UV_PROJECT_ENVIRONMENT=/home/app/.venv \
-    UV_LINK_MODE=copy
+    UV_LINK_MODE=copy \
+    COVERAGE_FILE=/tmp/.coverage
 
 # Create user
 RUN useradd -ms /bin/bash app -d /home/app -u 1000
