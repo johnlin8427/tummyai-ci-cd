@@ -37,6 +37,7 @@ ENV LANG=C.UTF-8 \
 RUN useradd -ms /bin/bash app -d /home/app -u 1000
 
 WORKDIR /app
+RUN mkdir -p /app/coverage && chown app:app /app/coverage
 USER app
 
 # Copy only runtime files
