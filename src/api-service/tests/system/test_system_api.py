@@ -73,7 +73,7 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert data["user_id"] == "example"
+        assert data["user_id"] == "example_user"
         assert data["file"] == "data/meal_history/meal_history_example.csv"
 
     def test_put_meal_history_not_found(self):
@@ -119,7 +119,7 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
-        assert data["user_id"] == "example"
+        assert data["user_id"] == "example_user"
         assert data["report_file"] == "data/health_report/health_report_example_user.csv"
 
     def test_put_health_report_not_found(self):
