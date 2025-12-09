@@ -34,6 +34,7 @@ ENV LANG=C.UTF-8 \
 
 # Create user
 RUN useradd -ms /bin/bash app -d /home/app -u 1000
+RUN mkdir -p /app/coverage && chown app:app /app/coverage
 
 WORKDIR /app
 USER app

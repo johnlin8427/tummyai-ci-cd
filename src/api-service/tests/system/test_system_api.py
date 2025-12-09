@@ -144,5 +144,5 @@ class TestAPIWithoutServer:
 
         from api.service import app
 
-        assert app.title == "API Server"
+        assert app.title == "TummyAI App API Server"
         assert app.version == "v1"
