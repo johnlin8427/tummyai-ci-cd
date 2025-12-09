@@ -2,9 +2,13 @@
 Unit tests for FastAPI application endpoints
 Tests various endpoint behaviors and error cases
 """
+import os
 import pytest
-from fastapi.testclient import TestClient
 
+# Set SKIP_DOWNLOAD before importing the app to prevent model download
+os.environ["SKIP_DOWNLOAD"] = "1"
+
+from fastapi.testclient import TestClient
 from api.service import app
 
 client = TestClient(app)

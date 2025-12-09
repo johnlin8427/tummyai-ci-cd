@@ -3,6 +3,11 @@ Integration tests for the TummyAI App API
 Tests the full API endpoints with FastAPI TestClient
 """
 
+import os
+
+# Set SKIP_DOWNLOAD before importing the app to prevent model download
+os.environ["SKIP_DOWNLOAD"] = "1"
+
 import pytest
 import pandas as pd
 from fastapi import HTTPException
