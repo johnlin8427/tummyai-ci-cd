@@ -42,6 +42,9 @@ api_app.include_router(meal_history.router, prefix="/meal-history")
 api_app.include_router(health_report.router, prefix="/health-report")
 api_app.include_router(chat_assistant.router, prefix="/chat-assistant")
 
-# Mount your API under ROOT-PATH to match the Ingress rule
-app = FastAPI(title="API Server", description="API Server", version="v1")
-app.mount(ROOT_PATH, api_app)
+# Mount your API under ROOT-PATH to match the Ingress rule (only if ROOT_PATH is set)
+if ROOT_PATH:
+    app = FastAPI(title="API Server", description="API Server", version="v1")
+    app.mount(ROOT_PATH, api_app)
+else:
+    app = api_app
