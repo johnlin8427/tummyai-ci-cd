@@ -37,6 +37,6 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [tool.coverage.run]
-data_file = "/tmp/.coverage"
+data_file = "/app/coverage/.coverage"
 parallel = true
 source = ["api"]
