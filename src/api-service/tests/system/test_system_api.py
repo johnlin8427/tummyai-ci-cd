@@ -120,7 +120,7 @@ class TestAPIEndpoints:
         data = response.json()
         assert data["status"] == "success"
         assert data["user_id"] == "example_user"
-        assert data["report_file"] == "data/health_report/health_report_example_user.csv"
+        assert data["file"] == "data/health_report/health_report_example_user.csv"
 
     def test_put_health_report_not_found(self):
         """Test putting to /health-report endpoint when file not found"""
