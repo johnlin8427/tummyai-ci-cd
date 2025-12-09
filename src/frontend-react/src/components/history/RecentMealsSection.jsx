@@ -25,12 +25,22 @@ export default function RecentMealsSection() {
 
             // Parse the response and format for display with placeholder photos initially
             const formattedMeals = (response.data || []).map((meal, index) => {
+                // Parse comma-separated strings into arrays
+                const ingredients = meal.ingredients ? meal.ingredients.split(', ').filter(x => x) : [];
+                const ingredientsFodmapHigh = meal.ingredients_fodmap_high ? meal.ingredients_fodmap_high.split(', ').filter(x => x) : [];
+                const ingredientsFodmapLow = meal.ingredients_fodmap_low ? meal.ingredients_fodmap_low.split(', ').filter(x => x) : [];
+                const ingredientsFodmapNone = meal.ingredients_fodmap_none ? meal.ingredients_fodmap_none.split(', ').filter(x => x) : [];
+
                 return {
                     id: index + 1,
                     timestamp: meal.date_time,
                     photo: null,
                     dish: meal.dish || 'Meal',
-                    ingredients: meal.ingredients ? meal.ingredients.split(', ') : [],
+                    dishFodmap: meal.dish_fodmap || 'unknown',
+                    ingredients: ingredients,
+                    ingredientsFodmapHigh: ingredientsFodmapHigh,
+                    ingredientsFodmapLow: ingredientsFodmapLow,
+                    ingredientsFodmapNone: ingredientsFodmapNone,
                     symptoms: meal.symptoms ? meal.symptoms.split(', ').filter(s => s) : [],
                 };
             }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)); // Sort by newest first
@@ -136,26 +146,64 @@ export default function RecentMealsSection() {
                     {formatDate(meal.timestamp)}
                 </div>
                 <h3 className="font-semibold text-xl">{meal.dish.toLowerCase()}</h3>
-                <div className="flex flex-wrap gap-1">
-                    {meal.ingredients.map((ingredient, index) => (
+                {meal.dishFodmap && (
+                    <div>
+                        <div className="text-xs font-semibold text-muted-foreground mb-1">Overall FODMAP Level:</div>
                         <span
-                            key={index}
-                            className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs"
+                            className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                meal.dishFodmap === 'high' || meal.dishFodmap === 'unknown'
+                                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                    : meal.dishFodmap === 'low' || meal.dishFodmap === 'moderate'
+                                    ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                    : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                            }`}
                         >
-                            {ingredient}
+                            {meal.dishFodmap}
                         </span>
-                    ))}
-                </div>
-                {meal.symptoms.length > 0 && (
+                    </div>
+                )}
+                <div>
+                    <div className="text-xs font-semibold text-muted-foreground mb-1">Ingredients:</div>
                     <div className="flex flex-wrap gap-1">
-                        {meal.symptoms.map((symptom, index) => (
+                        {meal.ingredientsFodmapHigh.map((ingredient, index) => (
                             <span
-                                key={index}
-                                className="px-2 py-0.5 bg-destructive/10 text-destructive rounded text-xs"
+                                key={`high-${index}`}
+                                className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-xs font-medium"
                             >
-                                {getSymptomLabel(symptom)}
+                                {ingredient}
                             </span>
                         ))}
+                        {meal.ingredientsFodmapLow.map((ingredient, index) => (
+                            <span
+                                key={`low-${index}`}
+                                className="px-2 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full text-xs font-medium"
+                            >
+                                {ingredient}
+                            </span>
+                        ))}
+                        {meal.ingredientsFodmapNone.map((ingredient, index) => (
+                            <span
+                                key={`none-${index}`}
+                                className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-xs font-medium"
+                            >
+                                {ingredient}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                {meal.symptoms.length > 0 && (
+                    <div>
+                        <div className="text-xs font-semibold text-muted-foreground mb-1">Symptoms:</div>
+                        <div className="flex flex-wrap gap-1">
+                            {meal.symptoms.map((symptom, index) => (
+                                <span
+                                    key={index}
+                                    className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-xs font-medium"
+                                >
+                                    {getSymptomLabel(symptom)}
+                                </span>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
@@ -184,26 +232,64 @@ export default function RecentMealsSection() {
                         {formatDate(meal.timestamp)}
                     </div>
                     <h3 className="font-semibold text-xl">{meal.dish.toLowerCase()}</h3>
-                    <div className="flex flex-wrap gap-1">
-                        {meal.ingredients.map((ingredient, index) => (
+                    {meal.dishFodmap && (
+                        <div>
+                            <div className="text-xs font-semibold text-muted-foreground mb-1">Overall FODMAP Level:</div>
                             <span
-                                key={index}
-                                className="px-2 py-0.5 bg-primary/10 text-primary rounded text-xs"
+                                className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                    meal.dishFodmap === 'high' || meal.dishFodmap === 'unknown'
+                                        ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                        : meal.dishFodmap === 'low' || meal.dishFodmap === 'moderate'
+                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                        : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                }`}
                             >
-                                {ingredient}
+                                {meal.dishFodmap}
                             </span>
-                        ))}
-                    </div>
-                    {meal.symptoms.length > 0 && (
+                        </div>
+                    )}
+                    <div>
+                        <div className="text-xs font-semibold text-muted-foreground mb-1">Ingredients:</div>
                         <div className="flex flex-wrap gap-1">
-                            {meal.symptoms.map((symptom, index) => (
+                            {meal.ingredientsFodmapHigh.map((ingredient, index) => (
                                 <span
-                                    key={index}
-                                    className="px-2 py-0.5 bg-destructive/10 text-destructive rounded text-xs"
+                                    key={`high-${index}`}
+                                    className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-xs font-medium"
                                 >
-                                    {getSymptomLabel(symptom)}
+                                    {ingredient}
                                 </span>
                             ))}
+                            {meal.ingredientsFodmapLow.map((ingredient, index) => (
+                                <span
+                                    key={`low-${index}`}
+                                    className="px-2 py-0.5 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full text-xs font-medium"
+                                >
+                                    {ingredient}
+                                </span>
+                            ))}
+                            {meal.ingredientsFodmapNone.map((ingredient, index) => (
+                                <span
+                                    key={`none-${index}`}
+                                    className="px-2 py-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-xs font-medium"
+                                >
+                                    {ingredient}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                    {meal.symptoms.length > 0 && (
+                        <div>
+                            <div className="text-xs font-semibold text-muted-foreground mb-1">Symptoms:</div>
+                            <div className="flex flex-wrap gap-1">
+                                {meal.symptoms.map((symptom, index) => (
+                                    <span
+                                        key={index}
+                                        className="px-2 py-0.5 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-xs font-medium"
+                                    >
+                                        {getSymptomLabel(symptom)}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -246,13 +332,46 @@ export default function RecentMealsSection() {
                             <p className="text-muted-foreground">{meal.dish.toLowerCase()}</p>
                         </div>
 
+                        {meal.dishFodmap && (
+                            <div>
+                                <h3 className="font-semibold mb-2">Overall FODMAP Level</h3>
+                                <span
+                                    className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
+                                        meal.dishFodmap === 'high' || meal.dishFodmap === 'unknown'
+                                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                            : meal.dishFodmap === 'low' || meal.dishFodmap === 'moderate'
+                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                            : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                    }`}
+                                >
+                                    {meal.dishFodmap}
+                                </span>
+                            </div>
+                        )}
+
                         <div>
                             <h3 className="font-semibold mb-2">Ingredients</h3>
                             <div className="flex flex-wrap gap-2">
-                                {meal.ingredients.map((ingredient, index) => (
+                                {meal.ingredientsFodmapHigh.map((ingredient, index) => (
                                     <span
-                                        key={index}
-                                        className="px-3 py-1 bg-primary/10 text-primary rounded-full"
+                                        key={`high-${index}`}
+                                        className="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full font-medium"
+                                    >
+                                        {ingredient}
+                                    </span>
+                                ))}
+                                {meal.ingredientsFodmapLow.map((ingredient, index) => (
+                                    <span
+                                        key={`low-${index}`}
+                                        className="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full font-medium"
+                                    >
+                                        {ingredient}
+                                    </span>
+                                ))}
+                                {meal.ingredientsFodmapNone.map((ingredient, index) => (
+                                    <span
+                                        key={`none-${index}`}
+                                        className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full font-medium"
                                     >
                                         {ingredient}
                                     </span>
@@ -267,7 +386,7 @@ export default function RecentMealsSection() {
                                     {meal.symptoms.map((symptom, index) => (
                                         <span
                                             key={index}
-                                            className="px-3 py-1 bg-destructive/10 text-destructive rounded-full"
+                                            className="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full font-medium"
                                         >
                                             {getSymptomLabel(symptom)}
                                         </span>

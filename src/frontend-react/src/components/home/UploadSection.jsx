@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Camera, Clock, Save, Upload } from 'lucide-react';
+import { Camera, Clock, Save, Upload, Info, X } from 'lucide-react';
 import apiClient from '@/lib/api';
 
 export default function UploadSection() {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+    const [showTips, setShowTips] = useState(false);
 
     // Get current time without rounding
     const getCurrentTime = () => {
@@ -26,7 +27,12 @@ export default function UploadSection() {
 
     const [mealTime, setMealTime] = useState(getCurrentTime());
     const [detectedDish, setDetectedDish] = useState('');
+    const [dishConfidence, setDishConfidence] = useState(0);
     const [ingredients, setIngredients] = useState([]);
+    const [ingredientsFodmapHigh, setIngredientsFodmapHigh] = useState([]);
+    const [ingredientsFodmapLow, setIngredientsFodmapLow] = useState([]);
+    const [ingredientsFodmapNone, setIngredientsFodmapNone] = useState([]);
+    const [fodmapLevel, setFodmapLevel] = useState('');
     const [symptoms, setSymptoms] = useState({
         cramps: false,
         bloating: false,
@@ -66,24 +72,38 @@ export default function UploadSection() {
             console.log('API Response:', response.data);
 
             // Parse the response according to the backend API structure
-            const dish = response.data.predicted_class || 'Unknown dish';
-            const ingredients = response.data.ingredients || [];
-            const confidence = response.data.confidence || 0;
-            const fodmapLevel = response.data.fodmap_level || 'unknown';
+            const dish = response.data.dish || 'Unknown dish';
+            const confidence = response.data.dish_confidence || 0;
+            const fodmapLevel = response.data.dish_fodmap || 'unknown';
 
-            // Capitalize the dish name for better display
-            const formattedDish = dish
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ');
+            // Parse comma-separated strings into arrays
+            const ingredients = response.data.ingredients ? response.data.ingredients.split(', ') : [];
+            const highFodmap = response.data.ingredients_fodmap_high ? response.data.ingredients_fodmap_high.split(', ').filter(x => x) : [];
+            const lowFodmap = response.data.ingredients_fodmap_low ? response.data.ingredients_fodmap_low.split(', ').filter(x => x) : [];
+            const noneFodmap = response.data.ingredients_fodmap_none ? response.data.ingredients_fodmap_none.split(', ').filter(x => x) : [];
 
-            setDetectedDish(formattedDish);
-            setIngredients(Array.isArray(ingredients) ? ingredients : []);
+            console.log('Parsed FODMAP ingredients:', {
+                high: highFodmap,
+                low: lowFodmap,
+                none: noneFodmap
+            });
+
+            setDetectedDish(dish);
+            setDishConfidence(confidence);
+            setIngredients(ingredients);
+            setIngredientsFodmapHigh(highFodmap);
+            setIngredientsFodmapLow(lowFodmap);
+            setIngredientsFodmapNone(noneFodmap);
+            setFodmapLevel(fodmapLevel);
         } catch (error) {
             console.error('Error analyzing photo:', error);
             console.error('Error details:', error.response?.data);
             setDetectedDish('Error analyzing photo');
             setIngredients([]);
+            setIngredientsFodmapHigh([]);
+            setIngredientsFodmapLow([]);
+            setIngredientsFodmapNone([]);
+            setFodmapLevel('');
         } finally {
             setIsAnalyzing(false);
         }
@@ -132,8 +152,13 @@ export default function UploadSection() {
             const mealData = {
                 date_time: mealTimeUTC,
                 dish: detectedDish,
-                ingredients: ingredients.join(', '), // Convert array to comma-separated string
-                symptoms: selectedSymptoms.join(', '), // Convert array to comma-separated string
+                dish_confidence: dishConfidence,
+                dish_fodmap: fodmapLevel,
+                ingredients: ingredients.join(', '),
+                ingredients_fodmap_high: ingredientsFodmapHigh.join(', '),
+                ingredients_fodmap_low: ingredientsFodmapLow.join(', '),
+                ingredients_fodmap_none: ingredientsFodmapNone.join(', '),
+                symptoms: selectedSymptoms.join(', '),
             };
 
             // Try to update meal history first
@@ -174,7 +199,12 @@ export default function UploadSection() {
             setSelectedFile(null);
             setPreviewUrl(null);
             setDetectedDish('');
+            setDishConfidence(0);
             setIngredients([]);
+            setIngredientsFodmapHigh([]);
+            setIngredientsFodmapLow([]);
+            setIngredientsFodmapNone([]);
+            setFodmapLevel('');
             setSymptoms({
                 cramps: false,
                 bloating: false,
@@ -246,7 +276,17 @@ export default function UploadSection() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {/* Upload Meal Component */}
                         <Card className="p-6">
-                            <h2 className="text-2xl font-bold mb-4">Upload Meal Photo</h2>
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-2xl font-bold">Upload Meal Photo</h2>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setShowTips(true)}
+                                    className="h-8 w-8"
+                                >
+                                    <Info className="h-4 w-4" />
+                                </Button>
+                            </div>
 
                             {/* Upload Button */}
                             <div className="mb-4">
@@ -277,16 +317,6 @@ export default function UploadSection() {
                                 </div>
                             )}
 
-                            {/* Tips */}
-                            <div className="bg-accent p-4 rounded-lg mb-4">
-                                <h3 className="font-semibold mb-2">Tips for better photos:</h3>
-                                <ul className="text-sm text-muted-foreground space-y-1">
-                                    <li>• Capture the entire meal</li>
-                                    <li>• Show every ingredient</li>
-                                    <li>• Use good lighting</li>
-                                </ul>
-                            </div>
-
                             {/* Analysis Results */}
                             {isAnalyzing ? (
                                 <div className="text-center py-4">
@@ -296,17 +326,53 @@ export default function UploadSection() {
                                 detectedDish && (
                                     <div className="space-y-4">
                                         <div>
-                                            <h3 className="font-semibold mb-2">Detected Dish:</h3>
-                                            <p className="text-lg">{detectedDish}</p>
+                                            <p className="text-2xl font-bold">{detectedDish}</p>
                                         </div>
-                                        {ingredients.length > 0 && (
+                                        {fodmapLevel && (
+                                            <div>
+                                                <h3 className="font-semibold mb-2">Overall FODMAP Level:</h3>
+                                                <div className="flex flex-wrap gap-2">
+                                                    <span
+                                                        className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                                            fodmapLevel === 'high' || fodmapLevel === 'unknown'
+                                                                ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                                                : fodmapLevel === 'low' || fodmapLevel === 'moderate'
+                                                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                                        }`}
+                                                    >
+                                                        {fodmapLevel}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+                                        {(ingredientsFodmapHigh.length > 0 || ingredientsFodmapLow.length > 0 || ingredientsFodmapNone.length > 0) && (
                                             <div>
                                                 <h3 className="font-semibold mb-2">Ingredients:</h3>
                                                 <div className="flex flex-wrap gap-2">
-                                                    {ingredients.map((ingredient, index) => (
+                                                    {/* High FODMAP ingredients (red) */}
+                                                    {ingredientsFodmapHigh.map((ingredient, index) => (
                                                         <span
-                                                            key={index}
-                                                            className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                                                            key={`high-${index}`}
+                                                            className="px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 rounded-full text-sm font-medium"
+                                                        >
+                                                            {ingredient}
+                                                        </span>
+                                                    ))}
+                                                    {/* Low FODMAP ingredients (yellow) */}
+                                                    {ingredientsFodmapLow.map((ingredient, index) => (
+                                                        <span
+                                                            key={`low-${index}`}
+                                                            className="px-3 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded-full text-sm font-medium"
+                                                        >
+                                                            {ingredient}
+                                                        </span>
+                                                    ))}
+                                                    {/* None FODMAP ingredients (green) */}
+                                                    {ingredientsFodmapNone.map((ingredient, index) => (
+                                                        <span
+                                                            key={`none-${index}`}
+                                                            className="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded-full text-sm font-medium"
                                                         >
                                                             {ingredient}
                                                         </span>
@@ -328,12 +394,12 @@ export default function UploadSection() {
 
                             <div className="space-y-4">
                                 {[
-                                    { key: 'cramps', label: 'Abdominal pain or cramps' },
-                                    { key: 'bloating', label: 'Excess gas and bloating' },
-                                    { key: 'diarrhea', label: 'Diarrhea' },
-                                    { key: 'constipation', label: 'Constipation' },
-                                    { key: 'fullness', label: 'Sensation of incomplete evacuation' },
-                                    { key: 'mucus', label: 'Mucus in stool' },
+                                    { key: 'cramps', label: 'abdominal pain or cramps' },
+                                    { key: 'bloating', label: 'excess gas and bloating' },
+                                    { key: 'diarrhea', label: 'diarrhea' },
+                                    { key: 'constipation', label: 'constipation' },
+                                    { key: 'fullness', label: 'sensation of incomplete evacuation' },
+                                    { key: 'mucus', label: 'mucus in stool' },
                                 ].map((symptom) => (
                                     <label
                                         key={symptom.key}
@@ -367,6 +433,26 @@ export default function UploadSection() {
                         <div className="text-center">
                             <h3 className="text-xl font-semibold">Entry saved!</h3>
                         </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Tips Modal */}
+            {showTips && (
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
+                    onClick={() => setShowTips(false)}
+                >
+                    <Card
+                        className="p-6 max-w-md w-full"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-2xl font-bold mb-4">Tips for better photos</h2>
+                        <ul className="text-sm text-muted-foreground space-y-2">
+                            <li>• Capture the entire meal</li>
+                            <li>• Show every ingredient</li>
+                            <li>• Use good lighting</li>
+                        </ul>
                     </Card>
                 </div>
             )}

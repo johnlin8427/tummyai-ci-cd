@@ -9,7 +9,12 @@ from fastapi.responses import JSONResponse
 from PIL import Image
 from fastapi import APIRouter
 
-from api.utils.food_model_utils import load_ingredients_map, load_food_model
+from api.utils.food_model_utils import (
+    load_dish_to_ing_dict,
+    load_ing_to_fodmap_dict,
+    load_food_model,
+    calculate_fodmap_level,
+)
 
 # Define router
 router = APIRouter()
@@ -19,16 +24,17 @@ skip_download = os.getenv("SKIP_DOWNLOAD", "0")
 
 # Load ingredients map and computer vision model once at startup
 if skip_download == "1":
-    ingredients_map = {}
+    dish_to_ing_dict = {}
+    ing_to_fodmap_dict = {}
     classifier = None
 else:
-    ingredients_map = load_ingredients_map()
+    dish_to_ing_dict = load_dish_to_ing_dict()
+    ing_to_fodmap_dict = load_ing_to_fodmap_dict()
     classifier = load_food_model()
 
 
 @router.post("/predict")
 async def predict(file: UploadFile = File(...)):
-    """Predict dish + ingredients from image"""
     try:
         # Check if model is loaded
         if classifier is None:
@@ -46,26 +52,21 @@ async def predict(file: UploadFile = File(...)):
             predicted_food = results[0]["label"]
             confidence = results[0]["score"]
 
-            # Simple FODMAP mapping (expand this based on your needs)
-            fodmap_mapping = {
-                "waffles": "moderate",
-                "bibimbap": "low",
-                "chicken wings": "low",
-                # Add more mappings as needed
-            }
-
-            fodmap_level = fodmap_mapping.get(predicted_food.lower(), "unknown")
-
             # Get ingredients for predicted dish
-            ingredients = ingredients_map.get(predicted_food.lower(), [])
+            ingredients = dish_to_ing_dict.get(predicted_food.lower(), [])
+
+            # Calculate FODMAP level based on actual ingredients
+            fodmap_result = calculate_fodmap_level(ingredients, ing_to_fodmap_dict)
 
             return JSONResponse(
                 content={
-                    "predicted_class": predicted_food,
-                    "confidence": confidence,
-                    "ingredients": ingredients,
-                    "fodmap_level": fodmap_level,
-                    "all_predictions": results[:5],  # Top 5 predictions
+                    "dish": predicted_food,
+                    "dish_confidence": confidence,
+                    "dish_fodmap": fodmap_result["level"],  # "high", "moderate", "low", "unknown"
+                    "ingredients": ", ".join(ingredients),
+                    "ingredients_fodmap_high": ", ".join(fodmap_result["high_fodmap"]),
+                    "ingredients_fodmap_low": ", ".join(fodmap_result["low_fodmap"]),
+                    "ingredients_fodmap_none": ", ".join(fodmap_result["none_fodmap"]),
                 }
             )
         else:

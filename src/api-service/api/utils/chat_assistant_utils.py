@@ -50,18 +50,20 @@ def create_chat_prompt(meal_history_text: str, health_report_text: str) -> str:
     **Statistical Interpretation Guide:**
     - odds_ratio > 1 or null: Ingredient is associated with increased symptom occurrence
     - p_value_adj < 0.05: Statistically significant correlation (high confidence)
-    - p_value_adj 0.05-0.2: Moderate evidence of correlation
+    - p_value_adj 0.05-0.2: Low evidence of correlation
 
     ## Your Task
 
     Based on this data, provide 4 concise, actionable dietary recommendations for this IBS patient.
 
     **Critical Requirements:**
-    1. Format as a bullet list with each bullet on a single line (max 100 characters per line)
+    1. Format as a bullet list with each bullet on a single line (max 200 characters per line)
     2. Start each bullet with a bullet point character (•)
-    3. Focus on the most important trigger foods found in the data
-    4. Be specific and actionable
-    5. Use a compassionate, professional tone
+    3. Warn user to avoid trigger foods with the most significant correlation for that user
+    4. Advise user to try removing trigger foods with lower correlation and their associated symptoms
+    5. Be personalized, specific, and actionable
+    6. Use a compassionate, professional tone
+    7. Do not include statistical values or jargon in the recommendations
 
     **Example Format:**
     • Avoid [specific ingredient] which shows strong correlation with [symptom]

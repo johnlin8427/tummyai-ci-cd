@@ -4,9 +4,9 @@
 set -e
 
 # Define some environment variables
-export IMAGE_NAME="tummyai-app"
+export IMAGE_NAME="tummyai-app-data-version"
 export BASE_DIR=$(pwd)
-export SECRETS_DIR=$(pwd)/../secrets/
+export SECRETS_DIR=$(pwd)/../../../secrets/
 export GCP_PROJECT="tummyai-ci-cd"
 export GCS_BUCKET_NAME="tummyai-app-models"
 

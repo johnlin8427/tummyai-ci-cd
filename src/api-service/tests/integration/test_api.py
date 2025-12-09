@@ -275,7 +275,7 @@ class TestHealthReportAPIEndpoints:
 
             mock_history_blob = MagicMock()
             mock_report_blob = MagicMock()
-            mock_report_blob.name = "health_report_testuser.csv"
+            mock_report_blob.name = f"data/health_report/health_report_{user_id}.csv"
 
             mock_get_blob.side_effect = [mock_history_blob, mock_report_blob]
             mock_read_csv.return_value = sample_history
@@ -289,7 +289,7 @@ class TestHealthReportAPIEndpoints:
             data = response.json()
             assert data["status"] == "success"
             assert data["user_id"] == user_id
-            assert data["report_file"] == "health_report_testuser.csv"
+            assert data["file"] == f"data/health_report/health_report_{user_id}.csv"
 
     def test_put_health_report_not_found(self):
         """Test PUT /health-report/{user_id} endpoint when meal history file not found"""

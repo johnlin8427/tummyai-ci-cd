@@ -22,8 +22,8 @@ async def upload_user_photo(user_id: str, date_time: str, file: UploadFile = Fil
         raise HTTPException(status_code=400, detail="File must be an image")
 
     # Generate unique filename with user date_time
-    # Convert date_time to filename-safe format (remove spaces and colons)
-    timestamp = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S").isoformat()
+    # Convert date_time to filename-safe format (remove dashes and colons)
+    timestamp = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S").isoformat().replace("-", "").replace(":", "")
     file_extension = file.filename.split(".")[-1] if "." in file.filename else "jpg"
     file_name = f"user_photo_{user_id}_{timestamp}.{file_extension}"
 
@@ -42,8 +42,8 @@ async def upload_user_photo(user_id: str, date_time: str, file: UploadFile = Fil
 @router.get("/{user_id}/{date_time}")
 async def get_user_photo(user_id: str, date_time: str):
     """Get meal photo for a specific user ID and date_time"""
-    # Convert date_time to filename format
-    timestamp = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S").isoformat()
+    # Convert date_time to filename format (remove dashes and colons)
+    timestamp = datetime.strptime(date_time, "%Y-%m-%dT%H:%M:%S").isoformat().replace("-", "").replace(":", "")
 
     # Try common image extensions
     bucket = get_gcs_bucket()

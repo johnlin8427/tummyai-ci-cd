@@ -79,7 +79,7 @@ async def delete_user(user_id: str):
             user_list_blob.upload_from_string("\n".join(user_list), content_type="text/plain")
             deleted_items.append("user list entry")
         else:
-            raise HTTPException(status_code=404, detail=f"User {user_id} not found in userlist")
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found in user list")
 
         # Delete meal history file
         meal_history_path = f"data/meal_history/meal_history_{user_id}.csv"
@@ -96,7 +96,7 @@ async def delete_user(user_id: str):
             deleted_items.append("health report")
 
         # Delete all user photos
-        photo_prefix = f"data/user_photo/meal_{user_id}_"
+        photo_prefix = f"data/user_photo/user_photo_{user_id}_"
         photo_blobs = list(bucket.list_blobs(prefix=photo_prefix))
 
         photo_count = 0

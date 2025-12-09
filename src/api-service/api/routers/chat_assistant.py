@@ -2,8 +2,10 @@
 Chat Assistant API using LLM
 """
 
+import time
 from fastapi import APIRouter, HTTPException
 from google.genai import types
+from google.genai.errors import ClientError
 
 from api.utils.utils import get_blob, read_csv_from_gcs
 from api.utils.chat_assistant_utils import get_gemini_client, create_chat_prompt
@@ -48,18 +50,41 @@ async def get_recommendations(user_id: str):
         # Create the prompt
         prompt = create_chat_prompt(meal_history_text, health_report_text)
 
-        # Call Gemini API
+        # Call Gemini API with retry logic for rate limits
+        max_retries = 3
+        retry_delay = 2  # seconds
         recommendations_text = None
-        response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                top_p=0.95,
-                max_output_tokens=300,
-            ),
-        )
-        recommendations_text = response.text
+
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash-exp",
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=0.7,
+                        top_p=0.95,
+                        max_output_tokens=300,
+                    ),
+                )
+                recommendations_text = response.text
+                break  # Success, exit retry loop
+
+            except ClientError as e:
+                error_message = str(e)
+                # Check if it's a rate limit error (429 or RESOURCE_EXHAUSTED)
+                if "429" in error_message or "RESOURCE_EXHAUSTED" in error_message:
+                    print(f"Rate limit hit (attempt {attempt + 1}/{max_retries}): {error_message}")
+                    if attempt < max_retries - 1:
+                        wait_time = retry_delay * (2**attempt)  # Exponential backoff: 2s, 4s, 8s
+                        print(f"Waiting {wait_time} seconds before retry...")
+                        time.sleep(wait_time)
+                    else:
+                        print("Max retries exceeded for rate limit.")
+                        # All retries exhausted, re-raise the error
+                        raise
+                else:
+                    # Other ClientError, re-raise immediately
+                    raise
 
         return {
             "recommendations": recommendations_text,

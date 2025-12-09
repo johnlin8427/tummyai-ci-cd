@@ -2,6 +2,7 @@
 Meal history APIs
 """
 
+import math
 import pandas as pd
 from fastapi import APIRouter, HTTPException
 
@@ -24,8 +25,18 @@ async def create_meal_history(user_id: str):
     if blob.exists():
         raise HTTPException(status_code=409, detail=f"Meal history for user {user_id} already exists.")
 
-    # Create empty DataFrame
-    columns = ["date_time", "dish", "ingredients", "symptoms"]
+    # Create empty DataFrame with all columns for meal prediction data
+    columns = [
+        "date_time",
+        "dish",
+        "dish_confidence",
+        "dish_fodmap",
+        "ingredients",
+        "ingredients_fodmap_high",
+        "ingredients_fodmap_low",
+        "ingredients_fodmap_none",
+        "symptoms",
+    ]
     df = pd.DataFrame(columns=columns)
 
     # Write empty meal history CSV to GCS
@@ -42,7 +53,14 @@ async def get_meal_history(user_id: str):
     blob = get_blob(pattern)
     df = read_csv_from_gcs(blob)
 
-    return df.to_dict(orient="records")
+    # Convert to dict and handle NaN/Inf values
+    records = df.to_dict(orient="records")
+    for record in records:
+        for key, value in record.items():
+            if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                record[key] = None
+
+    return records
 
 
 @router.put("/{user_id}")
@@ -53,11 +71,16 @@ async def update_meal_history(meal: dict, user_id: str):
     blob = get_blob(pattern)
     df = read_csv_from_gcs(blob)
 
-    # Prepare new row
+    # Prepare new row from meal data
     new_row = {
-        "date_time": meal.get("date_time"),
+        "date_time": meal.get("date_time", ""),
         "dish": meal.get("dish", ""),
+        "dish_confidence": meal.get("dish_confidence", 0.0),
+        "dish_fodmap": meal.get("dish_fodmap", ""),
         "ingredients": meal.get("ingredients", ""),
+        "ingredients_fodmap_high": meal.get("ingredients_fodmap_high", ""),
+        "ingredients_fodmap_low": meal.get("ingredients_fodmap_low", ""),
+        "ingredients_fodmap_none": meal.get("ingredients_fodmap_none", ""),
         "symptoms": meal.get("symptoms", ""),
     }
 

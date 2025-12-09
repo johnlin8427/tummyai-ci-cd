@@ -82,7 +82,7 @@ class TestAPIEndpoints:
 
     def test_get_health_report_example(self):
         """Test the /health-report/example endpoint"""
-        response = requests.get(f"{API_BASE_URL}/health-report/example")
+        response = requests.get(f"{API_BASE_URL}/health-report/health_report_example_user")
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -110,12 +110,12 @@ class TestAPIEndpoints:
 
     def test_put_health_report_example(self):
         """Test putting to /health-report/example endpoint"""
-        response = requests.put(f"{API_BASE_URL}/health-report/example")
+        response = requests.put(f"{API_BASE_URL}/health-report/health_report_example_user")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
         assert data["user_id"] == "example"
-        assert data["report_file"] == "data/health_report/health_report_example.csv"
+        assert data["report_file"] == "data/health_report/health_report_example_user.csv"
 
     def test_put_health_report_not_found(self):
         """Test putting to /health-report endpoint when file not found"""

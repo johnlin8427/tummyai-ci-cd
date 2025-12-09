@@ -93,16 +93,13 @@ export default function HealthReportSection() {
                         occurrences: food.symptoms.length,
                         symptomsTriggered: [...new Set(food.symptoms.map(s => s.symptom))],
                         riskLevel: riskLevel,
+                        minPValueAdj: food.minPValueAdj,
                     };
                 })
                 .filter(food => food !== null) // Remove items with no significant risk
                 .sort((a, b) => {
-                    // Sort by risk level and then by occurrences
-                    const riskOrder = { high: 3, medium: 2, low: 1 };
-                    if (riskOrder[b.riskLevel] !== riskOrder[a.riskLevel]) {
-                        return riskOrder[b.riskLevel] - riskOrder[a.riskLevel];
-                    }
-                    return b.occurrences - a.occurrences;
+                    // Sort by p_value_adj (low to high) - lower p-value means stronger evidence
+                    return a.minPValueAdj - b.minPValueAdj;
                 });
 
             // Process symptom trends - calculate this week vs last week
@@ -138,8 +135,17 @@ export default function HealthReportSection() {
 
             // Convert to symptom trends array
             const symptomOrder = ['cramps', 'bloating', 'diarrhea', 'constipation', 'fullness', 'mucus'];
-            let symptomTrends = Object.entries(symptomCounts)
-                .map(([symptom, counts]) => {
+
+            // Check if there are any meals in the meal history
+            let allSymptomTrends = [];
+
+            if (mealHistory.length === 0) {
+                // No meals, set symptomTrends to empty to show "not enough data" message
+                allSymptomTrends = [];
+            } else {
+                // Initialize all symptoms with zero counts
+                allSymptomTrends = symptomOrder.map(symptomKey => {
+                    const counts = symptomCounts[symptomKey] || { thisWeek: 0, lastWeek: 0 };
                     let trend = 'stable';
                     let change = 0;
 
@@ -155,43 +161,19 @@ export default function HealthReportSection() {
                     }
 
                     return {
-                        symptomKey: symptom,
-                        symptom: getSymptomLabel(symptom),
+                        symptomKey: symptomKey,
+                        symptom: getSymptomLabel(symptomKey),
                         trend: trend,
                         thisWeekCount: counts.thisWeek,
                         lastWeekCount: counts.lastWeek,
                         change: change,
                     };
-                })
-                .filter(item => item.thisWeekCount > 0 || item.lastWeekCount > 0)
-                .sort((a, b) => {
-                    // Sort by questionnaire order
-                    const orderA = symptomOrder.indexOf(a.symptomKey);
-                    const orderB = symptomOrder.indexOf(b.symptomKey);
-
-                    // If symptom not in order list, put it at the end
-                    if (orderA === -1 && orderB === -1) return 0;
-                    if (orderA === -1) return 1;
-                    if (orderB === -1) return -1;
-
-                    return orderA - orderB;
                 });
-
-            // If no symptom data in the last 2 weeks, show default symptoms with 0 counts
-            if (symptomTrends.length === 0) {
-                const defaultSymptoms = ['cramps', 'bloating', 'diarrhea', 'constipation', 'fullness', 'mucus'];
-                symptomTrends = defaultSymptoms.map(symptom => ({
-                    symptom: getSymptomLabel(symptom),
-                    trend: 'stable',
-                    thisWeekCount: 0,
-                    lastWeekCount: 0,
-                    change: 0,
-                }));
             }
 
             setHealthData({
                 foodsToWatch: foodsToWatch,
-                symptomTrends: symptomTrends,
+                symptomTrends: allSymptomTrends,
             });
 
             // Fetch recommendations after successfully getting health data
