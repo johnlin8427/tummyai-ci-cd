@@ -240,15 +240,15 @@ class TestChatAssistantRouter:
         response = client.get("/chat-assistant/user1")
         assert response.status_code == 200
 
+    @patch("api.routers.chat_assistant.read_csv_from_gcs")
     @patch("api.routers.chat_assistant.get_blob")
-    def test_get_recommendations_user_not_found(self, mock_get_blob):
-        """Test recommendations for non-existent user returns error"""
-        mock_get_blob.return_value = None
+    def test_get_recommendations_error(self, mock_get_blob, mock_read_csv):
+        """Test error handling when CSV read fails"""
+        mock_get_blob.return_value = MagicMock()
+        mock_read_csv.side_effect = Exception("Failed to read CSV")
 
-        response = client.get("/chat-assistant/nonexistent_user")
-        # When get_blob returns None, the code tries to use it and fails
-        # This should return 404 or 500 depending on error handling
-        assert response.status_code in [404, 500]
+        response = client.get("/chat-assistant/user1")
+        assert response.status_code == 500
 
 
 # ============================================================================
@@ -274,14 +274,15 @@ class TestMealHistoryRouter:
         response = client.get("/meal-history/user1")
         assert response.status_code == 200
 
+    @patch("api.routers.meal_history.read_csv_from_gcs")
     @patch("api.routers.meal_history.get_blob")
-    def test_get_meal_history_not_found(self, mock_get_blob):
-        """Test meal history not found returns error"""
-        mock_get_blob.return_value = None
+    def test_get_meal_history_error(self, mock_get_blob, mock_read_csv):
+        """Test error handling when CSV read fails"""
+        mock_get_blob.return_value = MagicMock()
+        mock_read_csv.side_effect = Exception("Failed to read CSV")
 
-        response = client.get("/meal-history/nonexistent_user")
-        # When get_blob returns None, the code tries to use it and fails
-        assert response.status_code in [404, 500]
+        response = client.get("/meal-history/user1")
+        assert response.status_code == 500
 
 
 # ============================================================================
@@ -308,14 +309,15 @@ class TestHealthReportRouter:
         response = client.get("/health-report/user1")
         assert response.status_code == 200
 
+    @patch("api.routers.health_report.read_csv_from_gcs")
     @patch("api.routers.health_report.get_blob")
-    def test_get_health_report_not_found(self, mock_get_blob):
-        """Test health report not found returns error"""
-        mock_get_blob.return_value = None
+    def test_get_health_report_error(self, mock_get_blob, mock_read_csv):
+        """Test error handling when CSV read fails"""
+        mock_get_blob.return_value = MagicMock()
+        mock_read_csv.side_effect = Exception("Failed to read CSV")
 
-        response = client.get("/health-report/nonexistent_user")
-        # When get_blob returns None, the code tries to use it and fails
-        assert response.status_code in [404, 500]
+        response = client.get("/health-report/user1")
+        assert response.status_code == 500
 
 
 # ============================================================================
