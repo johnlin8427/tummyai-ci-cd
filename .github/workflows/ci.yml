@@ -97,11 +97,10 @@ jobs:
       - name: Create coverage directory
         run: |
           mkdir -p ${{ github.workspace }}/coverage
-          chmod 777 ${{ github.workspace }}/coverage
 
       - name: Generate coverage report
         run: |
-          docker run --rm -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml --cov-report=html:coverage
+          docker run --rm -e COVERAGE_FILE=/home/app/.coverage -v ${{ github.workspace }}/coverage:/app/coverage tummyai-app-api:${{ github.sha }} pytest tests/unit/ --cov=api --cov-report=term --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage
         continue-on-error: true
 
       - name: Upload coverage report

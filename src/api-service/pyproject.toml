@@ -35,3 +35,12 @@ torch = { index = "pytorch" }
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
+
+[tool.coverage.run]
+data_file = "/home/app/.coverage"
+
+[tool.coverage.html]
+directory = "/app/coverage/html"
+
+[tool.coverage.xml]
+output = "/app/coverage/coverage.xml"
