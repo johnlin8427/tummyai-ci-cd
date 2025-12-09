@@ -43,7 +43,7 @@ class TestAPIEndpoints:
 
     def test_get_meal_history_example(self):
         """Test the /meal-history/example endpoint"""
-        response = requests.get(f"{API_BASE_URL}/meal-history/example")
+        response = requests.get(f"{API_BASE_URL}/meal-history/example_user")
 
         assert response.status_code == 200
         data = response.json()
@@ -63,8 +63,13 @@ class TestAPIEndpoints:
 
     def test_put_meal_history_example(self):
         """Test putting to /meal-history/example endpoint"""
-        new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
-        response = requests.put(f"{API_BASE_URL}/meal-history/example", json=new_record)
+        new_record = {
+            "date_time": "2025-01-01 12:00:00",
+            "dish": "pasta",
+            "ingredients": "milk,cheese",
+            "symptoms": "nausea",
+        }
+        response = requests.put(f"{API_BASE_URL}/meal-history/example_user", json=new_record)
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
@@ -74,7 +79,7 @@ class TestAPIEndpoints:
     def test_put_meal_history_not_found(self):
         """Test putting to /meal-history endpoint when file not found"""
         new_record = {"date_time": "2025-01-01 12:00:00", "ingredients": "milk,cheese", "symptoms": "nausea"}
-        response = requests.put(f"{API_BASE_URL}/meal-history/nonexistent", json=new_record)
+        response = requests.put(f"{API_BASE_URL}/meal-history/nonexistent_user", json=new_record)
         assert response.status_code == 404
         data = response.json()
         assert "detail" in data
@@ -82,7 +87,7 @@ class TestAPIEndpoints:
 
     def test_get_health_report_example(self):
         """Test the /health-report/example endpoint"""
-        response = requests.get(f"{API_BASE_URL}/health-report/health_report_example_user")
+        response = requests.get(f"{API_BASE_URL}/health-report/example_user")
         assert response.status_code == 200
         data = response.json()
         assert isinstance(data, list)
@@ -110,7 +115,7 @@ class TestAPIEndpoints:
 
     def test_put_health_report_example(self):
         """Test putting to /health-report/example endpoint"""
-        response = requests.put(f"{API_BASE_URL}/health-report/health_report_example_user")
+        response = requests.put(f"{API_BASE_URL}/health-report/example_user")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"

@@ -1,5 +1,5 @@
-//export const BASE_API_URL = process.env.REACT_APP_BASE_API_URL;
-export const BASE_API_URL = process.env.NEXT_PUBLIC_BASE_API_URL;
+// Single source of truth for API URL
+export const BASE_API_URL = process.env.NEXT_PUBLIC_BASE_API_URL || 'http://localhost:9000';
 export const APP_VERSION = 1.0;
 export const MOCK_SERVICE = true;
 
