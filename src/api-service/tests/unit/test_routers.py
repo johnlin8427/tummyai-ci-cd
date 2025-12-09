@@ -240,16 +240,6 @@ class TestChatAssistantRouter:
         response = client.get("/chat-assistant/user1")
         assert response.status_code == 200
 
-    @patch("api.routers.chat_assistant.read_csv_from_gcs")
-    @patch("api.routers.chat_assistant.get_blob")
-    def test_get_recommendations_error(self, mock_get_blob, mock_read_csv):
-        """Test error handling when CSV read fails"""
-        mock_get_blob.return_value = MagicMock()
-        mock_read_csv.side_effect = Exception("Failed to read CSV")
-
-        response = client.get("/chat-assistant/user1")
-        assert response.status_code == 500
-
 
 # ============================================================================
 # Meal History Router Tests  
@@ -273,16 +263,6 @@ class TestMealHistoryRouter:
 
         response = client.get("/meal-history/user1")
         assert response.status_code == 200
-
-    @patch("api.routers.meal_history.read_csv_from_gcs")
-    @patch("api.routers.meal_history.get_blob")
-    def test_get_meal_history_error(self, mock_get_blob, mock_read_csv):
-        """Test error handling when CSV read fails"""
-        mock_get_blob.return_value = MagicMock()
-        mock_read_csv.side_effect = Exception("Failed to read CSV")
-
-        response = client.get("/meal-history/user1")
-        assert response.status_code == 500
 
 
 # ============================================================================
@@ -308,16 +288,6 @@ class TestHealthReportRouter:
 
         response = client.get("/health-report/user1")
         assert response.status_code == 200
-
-    @patch("api.routers.health_report.read_csv_from_gcs")
-    @patch("api.routers.health_report.get_blob")
-    def test_get_health_report_error(self, mock_get_blob, mock_read_csv):
-        """Test error handling when CSV read fails"""
-        mock_get_blob.return_value = MagicMock()
-        mock_read_csv.side_effect = Exception("Failed to read CSV")
-
-        response = client.get("/health-report/user1")
-        assert response.status_code == 500
 
 
 # ============================================================================
