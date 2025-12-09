@@ -8,4 +8,4 @@ export IMAGE_NAME="app-building-template-frontend"
 docker build -t $IMAGE_NAME -f Dockerfile.dev .
 
 # Run the container
-docker run --rm --name $IMAGE_NAME -ti -v "$(pwd)/:/app/" -p 3001:3000 $IMAGE_NAME
+docker run --rm --name $IMAGE_NAME -ti -v "$(pwd)/:/app/" -p 3000:3000 $IMAGE_NAME

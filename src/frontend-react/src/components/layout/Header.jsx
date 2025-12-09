@@ -33,7 +33,7 @@ export default function Header() {
             const userId = newUserId.trim();
             try {
                 // Check if user exists
-                const response = await apiClient.get('/user-list');
+                const response = await apiClient.get('/user-list/');
                 const users = response.data.user_list || [];
 
                 if (!users.includes(userId)) {
@@ -61,7 +61,7 @@ export default function Header() {
             const userId = newUserId.trim();
             try {
                 // Check if user already exists
-                const response = await apiClient.get('/user-list');
+                const response = await apiClient.get('/user-list/');
                 const users = response.data.user_list || [];
 
                 if (users.includes(userId)) {

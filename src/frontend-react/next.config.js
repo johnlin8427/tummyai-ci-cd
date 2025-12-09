@@ -9,6 +9,7 @@ const nextConfig = {
         return config;
     },
     reactStrictMode: false,
+    output: "standalone"
 };
 
 module.exports = nextConfig;

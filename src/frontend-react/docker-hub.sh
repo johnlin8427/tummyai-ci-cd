@@ -26,12 +26,8 @@ fi
 echo "Creating new multi-arch builder..."
 docker buildx create --driver-opt network=host --use --name multi-arch
 
-# Build for multiple architectures
-echo "Building multi-arch image..."
-docker buildx build --platform linux/amd64 -t $DOCKER_USERNAME/$IMAGE_NAME -f Dockerfile .
-
-# Push
-echo "Pushing multi-arch image to registry..."
+# Build and push multi-arch image
+echo "Building and pushing multi-arch image..."
 docker buildx build --platform linux/amd64 --push -t $DOCKER_USERNAME/$IMAGE_NAME -f Dockerfile .
 
 echo "Production build complete and pushed to registry"
