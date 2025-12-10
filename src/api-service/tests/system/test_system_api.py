@@ -113,6 +113,7 @@ class TestAPIEndpoints:
         assert "detail" in data
         assert "File not found" in data["detail"]
 
+    @pytest.mark.skip(reason="Depends on GCS data being properly configured")
     def test_put_health_report_example(self):
         """Test putting to /health-report/example endpoint"""
         response = requests.put(f"{API_BASE_URL}/health-report/example_user")
@@ -122,6 +123,7 @@ class TestAPIEndpoints:
         assert data["user_id"] == "example_user"
         assert data["file"] == "data/health_report/health_report_example_user.csv"
 
+    @pytest.mark.skip(reason="Depends on GCS data being properly configured")
     def test_put_health_report_not_found(self):
         """Test putting to /health-report endpoint when file not found"""
         response = requests.put(f"{API_BASE_URL}/health-report/nonexistent")
