@@ -132,13 +132,18 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
       - name: Install Pulumi
         uses: pulumi/actions@v5
 
       - name: Install deployment dependencies
         run: |
           cd src/deployment
-          pip install -r requirements.txt 2>/dev/null || pip install pulumi pulumi-gcp pulumi-kubernetes pulumi-docker-build
+          uv sync || pip install pulumi pulumi-gcp pulumi-kubernetes pulumi-docker-build
 
       - name: Get GKE credentials
         run: |
