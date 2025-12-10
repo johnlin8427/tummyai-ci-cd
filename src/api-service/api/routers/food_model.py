@@ -6,7 +6,7 @@ import io
 import os
 from fastapi import UploadFile, File
 from fastapi.responses import JSONResponse
-from PIL import Image
+from PIL import Image, ImageOps
 from fastapi import APIRouter
 
 from api.utils.food_model_utils import (
@@ -42,7 +42,19 @@ async def predict(file: UploadFile = File(...)):
 
         # Read uploaded image
         image_bytes = await file.read()
-        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        image = Image.open(io.BytesIO(image_bytes))
+
+        # Apply EXIF orientation correction (fixes phone image rotation)
+        image = ImageOps.exif_transpose(image)
+
+        # Convert to RGB after orientation correction
+        image = image.convert("RGB")
+
+        # Resize large images for consistent processing (max 1024x1024)
+        # This helps with both memory usage and model consistency
+        max_size = (1024, 1024)
+        if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
+            image.thumbnail(max_size, Image.Resampling.LANCZOS)
 
         # Run model inference
         results = classifier(image)
