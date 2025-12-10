@@ -45,7 +45,8 @@ async def predict(file: UploadFile = File(...)):
         image = Image.open(io.BytesIO(image_bytes))
 
         # Apply EXIF orientation correction (fixes phone image rotation)
-        image = ImageOps.exif_transpose(image)
+        # exif_transpose returns None if image has no EXIF data, so use original image
+        image = ImageOps.exif_transpose(image) or image
 
         # Convert to RGB after orientation correction
         image = image.convert("RGB")
