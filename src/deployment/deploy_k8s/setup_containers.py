@@ -6,8 +6,8 @@ import pulumi_kubernetes as k8s
 
 def setup_containers(project, namespace, k8s_provider, ksa_name, app_name):
     # Get image references from deploy_images stack
-    # For local backend, use: "organization/project/stack"
-    images_stack = pulumi.StackReference("organization/deploy-images/dev")
+    # For Pulumi Cloud backend, use: "organization/project/stack"
+    images_stack = pulumi.StackReference("Elococin-org/deploy-images/dev")
     # Get the image tags (these are arrays, so we take the first element)
     api_service_tag = images_stack.get_output("tummyai-app-api-service-tags")
     frontend_tag = images_stack.get_output("tummyai-app-frontend-react-tags")
