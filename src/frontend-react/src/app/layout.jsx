@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
     return (
         <html lang="en" className="h-full" suppressHydrationWarning>
             <head>
-                <link href="assets/logo.svg" rel="shortcut icon" type="image/x-icon"></link>
+                <link href="assets/tummyai-logo.svg" rel="shortcut icon" type="image/x-icon"></link>
                 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
                 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&display=swap" rel="stylesheet" />
             </head>

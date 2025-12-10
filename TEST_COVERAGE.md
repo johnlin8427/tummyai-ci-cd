@@ -2,7 +2,7 @@
 
 ## Coverage Summary
 
-**Current Coverage: ~65%** (Exceeds 60% requirement)
+**Current Coverage: ~72%** 
 
 This document details what is tested and what remains untested in the TummyAI CI/CD project, fulfilling Milestone 5 requirements.
 
@@ -231,27 +231,3 @@ open htmlcov/index.html  # Opens coverage report in browser
 ```
 
 ---
-
-## Milestone 5 Requirements Checklist
-
-✅ **CI/CD for Production** - Fully implemented with GitHub Actions
-
-✅ **Unit Tests** - Comprehensive unit test suite for utilities and core logic
-
-✅ **Integration Tests** - Full API endpoint testing with mocked dependencies
-
-✅ **Minimum 60% Test Coverage** - Achieved ~65% coverage (see CI pipeline)
-
-✅ **Document Untested Code** - This document clearly lists what remains untested
-
-✅ **Automated Build-and-Deploy** - Merges to main trigger full CI/CD pipeline
-
-✅ **Deployment to Kubernetes** - Pulumi-based automated deployment to GKE
-
----
-
-## Contact
-
-For questions about testing or to report issues:
-- Create an issue on GitHub
-- Contact: [Your Team]
