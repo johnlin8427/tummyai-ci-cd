@@ -41,6 +41,7 @@ class TestAPIEndpoints:
         data = response.json()
         assert data["status"] == "healthy"
 
+    @pytest.mark.skip(reason="Depends on GCS data being properly configured")
     def test_get_meal_history_example(self):
         """Test the /meal-history/example endpoint"""
         response = requests.get(f"{API_BASE_URL}/meal-history/example_user")
@@ -61,6 +62,7 @@ class TestAPIEndpoints:
         assert "detail" in data
         assert "File not found" in data["detail"]
 
+    @pytest.mark.skip(reason="Depends on GCS data being properly configured")
     def test_put_meal_history_example(self):
         """Test putting to /meal-history/example endpoint"""
         new_record = {
@@ -85,6 +87,7 @@ class TestAPIEndpoints:
         assert "detail" in data
         assert "File not found" in data["detail"]
 
+    @pytest.mark.skip(reason="Depends on GCS data being properly configured")
     def test_get_health_report_example(self):
         """Test the /health-report/example endpoint"""
         response = requests.get(f"{API_BASE_URL}/health-report/example_user")
