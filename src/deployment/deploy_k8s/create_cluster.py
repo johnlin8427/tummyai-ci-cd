@@ -28,10 +28,12 @@ def create_cluster(project, zone, network, subnet, app_name):
     # -----------------------------
     # Kubeconfig for k8s provider
     # -----------------------------
-    k8s_info = pulumi.Output.all(cluster.name, cluster.endpoint, cluster.master_auth)
+    k8s_info = pulumi.Output.all(cluster.name, cluster.endpoint, cluster.master_auths)
 
     def make_kubeconfig(info):
-        cluster_name, endpoint, master_auth = info
+        cluster_name, endpoint, master_auths = info
+        # Get the first master_auth from the list
+        master_auth = master_auths[0] if master_auths else {}
         context_name = f"{project}_{zone}_{cluster_name}"
 
         kubeconfig = {
