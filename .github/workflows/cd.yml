@@ -149,6 +149,7 @@ jobs:
       - name: Deploy images with Pulumi
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          PULUMI_CONFIG_PASSPHRASE: ""
           GCP_REGION: ${{ env.REGION }}
         run: |
           cd src/deployment/deploy_images
@@ -158,6 +159,7 @@ jobs:
       - name: Deploy Kubernetes resources with Pulumi
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+          PULUMI_CONFIG_PASSPHRASE: ""
           GCP_REGION: ${{ env.REGION }}
         run: |
           cd src/deployment/deploy_k8s
