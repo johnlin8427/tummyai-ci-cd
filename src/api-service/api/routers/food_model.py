@@ -16,11 +16,72 @@ from api.utils.food_model_utils import (
     calculate_fodmap_level,
 )
 
+# Try to import HEIC support for iPhone images
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+    HEIC_SUPPORTED = True
+    print("✅ HEIC support enabled for iPhone images")
+except ImportError:
+    HEIC_SUPPORTED = False
+    print("⚠️ HEIC support not available (pillow-heif not installed)")
+
 # Define router
 router = APIRouter()
 
 # Define variables
 skip_download = os.getenv("SKIP_DOWNLOAD", "0")
+
+# Max image size for processing (pixels) - smaller = faster inference
+MAX_IMAGE_SIZE = 512
+
+
+def safe_load_image(image_bytes: bytes, filename: str = "") -> Image.Image:
+    """
+    Safely load and preprocess an image from bytes.
+    Handles EXIF orientation, HEIC format, and resizes large images.
+    
+    Args:
+        image_bytes: Raw image bytes
+        filename: Original filename for format detection
+        
+    Returns:
+        Preprocessed PIL Image in RGB mode
+    """
+    # Open image
+    image = Image.open(io.BytesIO(image_bytes))
+    print(f"📐 Original: {image.size}, mode: {image.mode}, format: {image.format}")
+    
+    # Apply EXIF orientation correction (fixes phone image rotation)
+    try:
+        transposed = ImageOps.exif_transpose(image)
+        if transposed is not None:
+            image = transposed
+            print("🔄 Applied EXIF orientation correction")
+    except Exception as e:
+        print(f"⚠️ EXIF transpose failed: {e}")
+    
+    # Convert to RGB (handles RGBA, P, L, HEIC modes)
+    if image.mode != "RGB":
+        print(f"🎨 Converting from {image.mode} to RGB")
+        # For images with transparency, paste on white background
+        if image.mode in ("RGBA", "LA", "P"):
+            background = Image.new("RGB", image.size, (255, 255, 255))
+            if image.mode == "P":
+                image = image.convert("RGBA")
+            background.paste(image, mask=image.split()[-1] if image.mode == "RGBA" else None)
+            image = background
+        else:
+            image = image.convert("RGB")
+    
+    # Resize large images for faster processing
+    if image.size[0] > MAX_IMAGE_SIZE or image.size[1] > MAX_IMAGE_SIZE:
+        original_size = image.size
+        image.thumbnail((MAX_IMAGE_SIZE, MAX_IMAGE_SIZE), Image.Resampling.LANCZOS)
+        print(f"📏 Resized from {original_size} to {image.size}")
+    
+    return image
+
 
 # Load ingredients map and computer vision model once at startup
 if skip_download == "1":
@@ -55,37 +116,12 @@ async def predict(file: UploadFile = File(...)):
         if len(image_bytes) == 0:
             return JSONResponse(content={"error": "Empty file received"}, status_code=400)
 
+        # Use safe_load_image for robust image handling (HEIC, EXIF, resizing)
         try:
-            image = Image.open(io.BytesIO(image_bytes))
+            image = safe_load_image(image_bytes, file.filename or "")
         except Exception as img_err:
-            print(f"❌ Failed to open image: {img_err}")
+            print(f"❌ Failed to load image: {img_err}")
             return JSONResponse(content={"error": f"Invalid image format: {str(img_err)}"}, status_code=400)
-
-        # Log original image info
-        print(f"📐 Original image size: {image.size}, mode: {image.mode}, format: {image.format}")
-
-        # Apply EXIF orientation correction (fixes phone image rotation)
-        # exif_transpose returns None if image has no EXIF data, so use original image
-        try:
-            transposed = ImageOps.exif_transpose(image)
-            if transposed is not None:
-                image = transposed
-                print("🔄 Applied EXIF orientation correction")
-        except Exception as exif_err:
-            print(f"⚠️ EXIF transpose failed (continuing with original): {exif_err}")
-
-        # Convert to RGB after orientation correction (handles RGBA, P, L modes)
-        if image.mode != "RGB":
-            print(f"🎨 Converting from {image.mode} to RGB")
-            image = image.convert("RGB")
-
-        # Resize large images for consistent processing (max 1024x1024)
-        # This helps with both memory usage and model consistency
-        max_size = (1024, 1024)
-        if image.size[0] > max_size[0] or image.size[1] > max_size[1]:
-            original_size = image.size
-            image.thumbnail(max_size, Image.Resampling.LANCZOS)
-            print(f"📏 Resized from {original_size} to {image.size}")
 
         # Run model inference
         print("🤖 Running model inference...")
