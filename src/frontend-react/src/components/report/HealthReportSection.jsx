@@ -18,7 +18,11 @@ export default function HealthReportSection() {
     const fetchHealthReport = async () => {
         setIsLoading(true);
         try {
-            const userId = localStorage.getItem('tummyai_user_id') || 'default_user';
+            const userId = localStorage.getItem('tummyai_user_id');
+            if (!userId) {
+                setIsLoading(false);
+                return; // No user selected, don't fetch
+            }
             const [healthResponse, mealHistoryResponse] = await Promise.all([
                 apiClient.get(`/health-report/${userId}`),
                 apiClient.get(`/meal-history/${userId}`)

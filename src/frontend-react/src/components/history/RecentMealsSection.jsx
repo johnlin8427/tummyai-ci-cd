@@ -20,7 +20,11 @@ export default function RecentMealsSection() {
         setIsLoading(true);
         try {
             // Get user_id from localStorage
-            const userId = localStorage.getItem('tummyai_user_id') || 'default_user';
+            const userId = localStorage.getItem('tummyai_user_id');
+            if (!userId) {
+                setIsLoading(false);
+                return; // No user selected, don't fetch
+            }
             const response = await apiClient.get(`/meal-history/${userId}`);
 
             // Parse the response and format for display with placeholder photos initially

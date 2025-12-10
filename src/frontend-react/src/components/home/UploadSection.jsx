@@ -122,7 +122,10 @@ export default function UploadSection() {
             const selectedSymptoms = Object.keys(symptoms).filter((key) => symptoms[key]);
 
             // Get user_id from localStorage
-            const userId = localStorage.getItem('tummyai_user_id') || 'default_user';
+            const userId = localStorage.getItem('tummyai_user_id');
+            if (!userId) {
+                throw new Error('No user account selected. Please create an account first.');
+            }
 
             // Convert local time to UTC for backend storage in ISO format
             const mealTimeUTC = new Date(mealTime).toISOString().slice(0, 19);

@@ -23,9 +23,15 @@ export default function Header() {
     const pathname = usePathname();
 
     useEffect(() => {
-        // Load user_id from localStorage or use default
-        const storedUserId = localStorage.getItem('tummyai_user_id') || 'default_user';
-        setCurrentUserId(storedUserId);
+        // Load user_id from localStorage
+        const storedUserId = localStorage.getItem('tummyai_user_id');
+        if (storedUserId) {
+            setCurrentUserId(storedUserId);
+        } else {
+            // No user set - show account creation modal automatically
+            setShowAccountModal(true);
+            setCurrentUserId('No account selected');
+        }
     }, []);
 
     const handleAccountChange = async () => {
@@ -188,8 +194,11 @@ export default function Header() {
                 <div
                     className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
                     onClick={() => {
-                        setShowAccountModal(false);
-                        setAccountError('');
+                        // Only allow closing if user has an account
+                        if (currentUserId && currentUserId !== 'No account selected') {
+                            setShowAccountModal(false);
+                            setAccountError('');
+                        }
                     }}
                 >
                     <Card
@@ -243,16 +252,18 @@ export default function Header() {
                                 >
                                     Create Account
                                 </Button>
-                                <Button
-                                    onClick={() => {
-                                        setShowAccountModal(false);
-                                        setAccountError('');
-                                    }}
-                                    variant="outline"
-                                    className="flex-1"
-                                >
-                                    Cancel
-                                </Button>
+                                {currentUserId && currentUserId !== 'No account selected' && (
+                                    <Button
+                                        onClick={() => {
+                                            setShowAccountModal(false);
+                                            setAccountError('');
+                                        }}
+                                        variant="outline"
+                                        className="flex-1"
+                                    >
+                                        Cancel
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </Card>
