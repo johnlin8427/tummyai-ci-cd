@@ -10,7 +10,7 @@ mkdir -p /mnt/gcs_bucket
 gcsfuse --key-file=$GOOGLE_APPLICATION_CREDENTIALS $GCS_BUCKET_NAME /mnt/gcs_bucket
 echo 'GCS bucket mounted at /mnt/gcs_bucket'
 mkdir -p /app/gcs_data
-mount --bind /mnt/gcs_bucket/data /app/gcs_data
+mount --bind /mnt/gcs_bucket/data_version /app/gcs_data
 
 # Activate virtual environment
 echo "Activating virtual environment..."
