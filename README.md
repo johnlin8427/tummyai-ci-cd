@@ -326,7 +326,9 @@ TrainOutput(global_step=13188,
                 'epoch': 3.0})
 
 
-Overall, the model shows consistent improvement throughout training, with validation loss steadily decreasing and top-1 accuracy rising from 9% to nearly 70%. Top-5 accuracy exceeds 86% by step 13,000, indicating that the fine-tuned model successfully learns the expanded food label space derived from the harmonized dataset.
+Overall, the model shows consistent improvement throughout training, with validation loss steadily decreasing and top-1 accuracy rising from 9% to nearly 70%. Top-5 accuracy exceeds 86% by step 13,000, indicating that the fine-tuned model successfully learns the expanded food label space derived from the harmonized dataset. The training notebook can be found in /docS
+
+To verify that the fine-tuned model produces reasonable predictions before deployment, a lightweight validation step was performed using a small set of selected test images. Each image was passed through the model to generate top-1 and top-5 predictions, allowing quick assessment of whether the model could generalize to unseen examples from both Food-101 and the harmonized MM-Food-100K label space. The scripts are in /src/validation_check folder
 
 
 
