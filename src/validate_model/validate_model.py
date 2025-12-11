@@ -1,6 +1,5 @@
 import csv
 import os
-import sys
 from pathlib import Path
 import torch
 from PIL import Image
@@ -13,6 +12,7 @@ SCRIPT_DIR = Path(__file__).parent
 CSV_PATH = SCRIPT_DIR / "test_labels.csv"
 MODEL_LOCAL_PATH = "/tmp/validate_model"
 MODEL_GCS_PATH = "models/v2"  # Adjust to match your model path in GCS
+
 
 def download_model_from_gcs():
     """Download model from GCS bucket."""
@@ -117,7 +117,7 @@ def main():
             # Convert relative path to absolute path
             full_img_path = SCRIPT_DIR / img_path
             preds = predict(full_img_path, processor, model, device)
-            
+
             pred_top1 = preds[0][0].lower()
             pred_top5 = [p[0].lower() for p in preds]
 
@@ -142,6 +142,7 @@ def main():
     print(f"Total images: {total}")
     print(f"Top-1 accuracy: {top1/total*100:.2f}%")
     print(f"Top-5 accuracy: {top5/total*100:.2f}%")
+
 
 if __name__ == "__main__":
     main()
