@@ -2,7 +2,7 @@
 
 ## Coverage Summary
 
-**Current Coverage: ~72%** 
+**Current Coverage: ~72%**
 
 This document details what is tested and what remains untested in the TummyAI CI/CD project, fulfilling Milestone 5 requirements.
 
