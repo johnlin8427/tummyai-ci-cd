@@ -1,0 +1,8 @@
+image_path,true_label
+test_images/sample_0_mussels.jpg,mussels
+test_images/sample_2_lobster_bisque.jpg,lobster bisque
+test_images/sample_4_caesar_salad.jpg,caesar salad
+test_images/sample_5_chicken_quesadilla.jpg,chicken quesadilla
+test_images/sample_6_baklava.jpg,baklava
+test_images/sample_8_tuna_tartare.jpg,tuna tartare
+test_images/sample_9_nachos.jpg,nachos
