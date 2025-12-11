@@ -213,7 +213,28 @@ Currently, users are required to upload a meal photo and report their symptoms a
 
 At present, users are not able to edit the list of ingredients identified by our fine-tuned Vision Transformer model. We aim to implement this feature in both the Home and Meal History Pages.
 
-## Additional Details
+## Additional Details (Technical Implementation)
+
+### Kubernetes Deployment
+
+Kubernetes demonstrates horizontal pod autoscaling behavior:
+
+- Baseline: 2 pods
+- Under load: Automatically scaled to 9 pods (memory at 132% of 80% target)
+- Configuration: HPA monitors CPU (70% target) and memory (80% target)
+- Range: 2-10 pods
+
+**Autoscaling Behavior Demonstration:**
+
+![Mockup](images/kubernetes.png)
+
+### Pulumi Infrastructure
+
+Pulumi automates the provisioning and deployment of our infrastructure and application.
+
+**Provisioning and Deployment Demonstration:**
+
+![Mockup](images/pulumi.png)
 
 ### CI Pipeline
 
@@ -254,3 +275,5 @@ Our Continuous Deployment (CD) pipeline extends the CI pipeline:
 **CD Pipeline Screenshot**
 
 ![Mockup](images/cd_pipeline.png)
+
+### ML Workflow
